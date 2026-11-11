@@ -16,6 +16,7 @@
  *      按住拖曳可以手動移動鉤子（鉤子在手指上方 40px）。
  *      色球在空中時，在螢幕任何地方左右滑動，色球照滑動量移動；快速點一下 = 再彈一次。
  *      手機上鉤到範圍與船的接住範圍放寬一點，鉤到、落船時會震動（Android）。
+ *   每隔一陣子會有一顆色球游出畫面、換成別的顏色游回來（主題色不會），不用重新整理也有新顏色。
  *   4. 掉進船裡才算釣到 → 換成這個顏色，船上原本那顆被丟回水裡；
  *      掉回水裡就是失敗，色球游走。一次只能甩一顆。
  */
@@ -36,6 +37,7 @@ window.addEventListener("load", function () {
         swayAmpY: 5,                  // 船上下晃動幅度
         swayOmega: 1.2,               // 船晃動角速度 (rad/s)
         fishSpeed: 42,                // 色球基礎游速 (px/s)
+        swapEvery: [18, 35],          // 每隔幾秒（隨機）讓一顆色球游出畫面、換成別的顏色游回來
         hookOmega: 7,                 // 魚鉤彈簧的自然頻率
         hookZeta: 0.55,               // 魚鉤彈簧阻尼（<1 會微微擺盪）
         touchLinger: 4,               // 手指離開後鉤子停留時間 (s)
@@ -332,6 +334,7 @@ window.addEventListener("load", function () {
     let lastTouchX = 0, touchDownX = 0, touchDownY = 0, touchDownT = 0;
     let touchSteerX = 0;           // 空中時色球要去的 x（由滑動量累加）
     let autoTarget = null, autoT = 0; // 手機點到的色球：魚鉤會自己游過去鉤它
+    let autoAim = false;              // 手機：鉤到後自動拋向船（玩家在空中滑動就改成手動）
     const isInAir = () => state === "fly" || state === "land" ||
         ((state === "idle" || state === "cooldown") && airYanks > 0);
 
@@ -346,7 +349,9 @@ window.addEventListener("load", function () {
         px = e.clientX; py = e.clientY;
         touchUntil = nowS() + CFG.touchLinger;
         if (touchMode === "steer" && state === "fly") {
-            touchSteerX = clamp(touchSteerX + dx * CFG.touchSteerGain, 8, vw - 8);
+            // 真的滑動了（不是點一下）→ 從自動拋向船改成手動操控
+            if (autoAim && Math.abs(e.clientX - touchDownX) > CFG.tapMaxMove) { autoAim = false; touchSteerX = hx; }
+            if (!autoAim) touchSteerX = clamp(touchSteerX + dx * CFG.touchSteerGain, 8, vw - 8);
         }
     }, { passive: true });
     window.addEventListener("pointerdown", function (e) {
@@ -448,7 +453,13 @@ window.addEventListener("load", function () {
         // 靠近邊界就轉向內側
         const m = 60;
         let wx = 0, wy = 0;
-        if (f.x < B.l + m) wx = 1; else if (f.x > B.r - m) wx = -1;
+        if (f.goal) {
+            // 要游出畫面（out）或剛游進來（in）：朝目標方向游，左右不受邊界限制
+            const dir = f.goal === "out" ? f.exitDir : -f.exitDir;
+            turn += angleDiff(dir > 0 ? 0 : Math.PI, f.h) * 1.6;
+        } else {
+            if (f.x < B.l + m) wx = 1; else if (f.x > B.r - m) wx = -1;
+        }
         if (f.y < B.t + m * 0.5) wy = 1; else if (f.y > B.b - m * 0.5) wy = -1;
         if (wx || wy) turn += angleDiff(Math.atan2(wy, wx), f.h) * 2.2;
         f.h += turn * dt;
@@ -458,8 +469,56 @@ window.addEventListener("load", function () {
         f.kick = s * s * s * s;
         let speed = CFG.fishSpeed * (0.45 + 1.5 * f.kick);
         if (f.flee > 0) { f.flee -= dt; speed += 120 * f.flee; f.kick = Math.max(f.kick, f.flee); }
-        f.x = clamp(f.x + Math.cos(f.h) * speed * dt, B.l, B.r);
+        f.x += Math.cos(f.h) * speed * dt;
+        if (!f.goal) f.x = clamp(f.x, B.l, B.r);
         f.y = clamp(f.y + Math.sin(f.h) * speed * dt, B.t, B.b);
+
+        if (f.goal === "out" && (f.x < -30 || f.x > vw + 30)) {
+            // 游出畫面了：換成同色系裡、畫面上沒有的另一個顏色，再從左或右游進來
+            recolor(f);
+            f.exitDir = Math.random() < 0.5 ? -1 : 1;           // 從這一側進來
+            f.x = f.exitDir < 0 ? -25 : vw + 25;
+            f.y = rand(B.t + 20, B.b - 10);
+            f.h = f.exitDir < 0 ? 0 : Math.PI;
+            f.goal = "in";
+        } else if (f.goal === "in" && f.x > B.l + 40 && f.x < B.r - 40) {
+            f.goal = null;                                      // 進到畫面裡，恢復平常游動
+        }
+    }
+
+    // ===== 色球游出去換色 =====
+    const FAMILY_MAPS = {
+        yellow: typeof yellowButtonTextMap !== "undefined" ? yellowButtonTextMap : null,
+        orange: typeof orangeButtonTextMap !== "undefined" ? orangeButtonTextMap : null,
+        red:    typeof redButtonTextMap    !== "undefined" ? redButtonTextMap    : null,
+        purple: typeof purpleButtonTextMap !== "undefined" ? purpleButtonTextMap : null,
+        blue:   typeof blueButtonTextMap   !== "undefined" ? blueButtonTextMap   : null,
+        green:  typeof greenButtonTextMap  !== "undefined" ? greenButtonTextMap  : null,
+    };
+    const isTheme = (f) => (f.el.dataset.color || "").indexOf("theme") === 0; // 主題色永遠不換
+    function recolor(f) {
+        const m = (f.el.dataset.color || "").match(/^([a-zA-Z]+)(\d+)$/);
+        if (!m || !FAMILY_MAPS[m[1]]) return;
+        const fam = m[1], map = FAMILY_MAPS[fam];
+        const onScreen = new Set(fish.map((g) => g.el.dataset.color));
+        const choices = Object.keys(map).filter((k) => !onScreen.has(fam + k));
+        if (!choices.length) return;
+        const k = choices[Math.floor(Math.random() * choices.length)];
+        f.el.dataset.color = fam + k;
+        f.el.style.backgroundColor = map[k].hexText;
+    }
+    let nextSwap = 0;
+    function scheduleSwap(t) {
+        if (!nextSwap) { nextSwap = t + rand(CFG.swapEvery[0], CFG.swapEvery[1]); return; }
+        if (t < nextSwap) return;
+        if (fish.some((f) => f.goal)) return;                   // 一次只換一顆
+        const candidates = fish.filter((f) => f.mode === "swim" && !isTheme(f) && f !== autoTarget);
+        if (candidates.length) {
+            const f = candidates[Math.floor(Math.random() * candidates.length)];
+            f.goal = "out";
+            f.exitDir = f.x < vw / 2 ? -1 : 1;                  // 往比較近的那一邊游出去
+        }
+        nextSwap = t + rand(CFG.swapEvery[0], CFG.swapEvery[1]);
     }
 
     function startArc(f, toX, toY, T, H) {
@@ -506,6 +565,21 @@ window.addEventListener("load", function () {
         return best;
     }
 
+    // 手機：算出拋向船的水平速度。
+    // 色球落到甲板高度的時間 t：y + vy·t + ½g·t² = 甲板 → t = (−vy + √(vy² + 2g·(甲板 − y))) / g
+    // 水平速度 = (瓶子的 x − 色球的 x) / t，剛好在落到甲板時到達瓶子上方
+    function aimAtBoat() {
+        const g = CFG.flyGravity;
+        const fishX = hx + bendDX(), fishY = hy + bendDY();
+        const deck = boatCY + CFG.holdSpot.y + swayY;
+        const disc = hvy * hvy + 2 * g * (deck - fishY);
+        if (disc <= 0) return;
+        const t = (-hvy + Math.sqrt(disc)) / g;
+        if (t <= 0.05) return;
+        const targetX = boatCX + CFG.holdSpot.x + swayX;
+        hvx = (targetX - fishX) / t;
+    }
+
     function drawFish(f, rot, sx, sy) {
         f.el.style.transform =
             "translate3d(" + (f.x - originX - fishR).toFixed(1) + "px," +
@@ -548,6 +622,7 @@ window.addEventListener("load", function () {
                 if (airYanks < CFG.maxYanks) {
                     airYanks++;
                     hvy = Math.min(hvy, -Math.sqrt(2 * CFG.flyGravity * CFG.flyReboost));
+                    if (autoAim) aimAtBoat(); // 彈高了，重新算一次水平速度，還是落進船裡
                 }
             } else if ((state === "idle" || state === "cooldown") && airYanks > 0) {
                 // 空鉤還在空中：再彈一次
@@ -569,8 +644,11 @@ window.addEventListener("load", function () {
                     recoverT = 0;
                     airYanks = 1;
                     caught = f;
+                    f.goal = null;          // 正在游出去／游進來的被釣到了，就不換色了
                     flyRose = false;
                     touchSteerX = hx;       // 手機：空中從目前位置開始滑動操控
+                    autoAim = clickTouch;   // 手機：自動拋向船
+                    if (autoAim) aimAtBoat();
                     buzz(15);               // 手機震動：鉤到了
                     f.mode = "hooked";
                     splash(hx + bendDX(), hy + bendDY());
@@ -599,7 +677,7 @@ window.addEventListener("load", function () {
                 ? (active ? clamp(px, 8, vw - 8) : hx)
                 : touchSteerX;              // 手機：照滑動量移動，手指不必跟著色球
             const w = CFG.steerOmega;
-            hvx += (w * w * (steerX - hx) - 2 * 0.9 * w * hvx) * dt;
+            if (!autoAim) hvx += (w * w * (steerX - hx) - 2 * 0.9 * w * hvx) * dt; // 自動拋向船時，水平速度固定
             hvy += CFG.flyGravity * dt;
             hx += hvx * dt;
             hy += hvy * dt;
@@ -736,6 +814,7 @@ window.addEventListener("load", function () {
         }
 
         // --- 色球 ---
+        scheduleSwap(t);
         for (let i = 0; i < fish.length; i++) {
             const f = fish[i];
             let rot = f.h, sx = 1, sy = 1;
