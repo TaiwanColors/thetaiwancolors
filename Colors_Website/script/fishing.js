@@ -69,7 +69,7 @@ window.addEventListener("load", function () {
     };
     // 點這些介面元素時不提竿、不放鉤
     const UI_SELECTOR = "#rainButton,#snowButton,#foggyButton,#starryskyButton," +
-        "#visibleIcon,#hideIcon,#logo,.Instagram-text,.YouTube-text,.Threads-text";
+        "#visibleIcon,#hideIcon,#logo,.Instagram-text,.YouTube-text,.Threads-text,#loading";
 
     const boatEl = document.getElementById("boat_container_from");
     const container = document.getElementById("button-container");
@@ -288,7 +288,7 @@ window.addEventListener("load", function () {
         };
     });
 
-    // 還沒釣到第一條魚之前，不顯示顏色標題、副標、CMYK、RGB（第一次落進瓶子時才淡入）
+    // 還沒釣到第一條魚之前，不顯示顏色標題、副標、CMYK、RGB、色號（第一次落進瓶子時才淡入）
     document.body.classList.add("awaiting-catch");
 
     let held = fish.find((f) => f.el.classList.contains("active")) || null;
@@ -297,6 +297,11 @@ window.addEventListener("load", function () {
         held.x = boatCX + CFG.holdSpot.x;
         held.y = boatCY + CFG.holdSpot.y;
         setLineColor(window.getComputedStyle(held.el).backgroundColor);
+    } else {
+        // 一開始沒有目前的顏色（固定底色）：釣線、瓶子照背景色決定深淺
+        // （背景色會花 2.5 秒漸變過去，要讀「目標」顏色，不能讀漸變中的顏色）
+        const sq = document.querySelector(".square");
+        setLineColor((sq && sq.style.backgroundColor) || "rgb(76, 76, 76)");
     }
 
     function setLineColor(bg) {

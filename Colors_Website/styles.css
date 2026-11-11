@@ -871,7 +871,7 @@ body {
   }
   
 /* ===== 顏色資訊（fishing.js 控制） =====
-   還沒釣到第一條魚之前：不顯示顏色標題、副標、CMYK、RGB */
+   還沒釣到第一條魚之前：不顯示顏色標題、副標、CMYK、RGB、色號 */
 body.awaiting-catch .ColorNames-text,
 body.awaiting-catch .EnColorNames-text,
 body.awaiting-catch .C-text,
@@ -887,7 +887,8 @@ body.awaiting-catch .Y-int-text,
 body.awaiting-catch .K-int-text,
 body.awaiting-catch .R-int-text,
 body.awaiting-catch .G-int-text,
-body.awaiting-catch .B-int-text {
+body.awaiting-catch .B-int-text,
+body.awaiting-catch .Hex-int-text {
     visibility: hidden;
 }
 
@@ -1238,14 +1239,14 @@ body.color-info-reveal .Hex-int-text {
 .loading-scene {
     position: relative;
     width: 160px;
-    height: 74px;
+    height: 96px;
 }
 
 /* 釣線：跟網站上的釣線一樣，一顆顆小圓點 */
 .loading-line {
     position: absolute;
     left: 50%;
-    top: 0;
+    top: -8px;               /* 釣線和魚鉤整組往上一點 */
     width: 2px;
     height: 34px;
     margin-left: -1px;
@@ -1257,7 +1258,7 @@ body.color-info-reveal .Hex-int-text {
 .loading-hook {
     position: absolute;
     left: 50%;
-    top: 32px;
+    top: 24px;
     width: 11px;
     height: 13px;
     margin-left: -2px;
@@ -1274,7 +1275,7 @@ body.color-info-reveal .Hex-int-text {
 .loading-wave-box {
     position: absolute;
     left: 0;
-    bottom: 6px;
+    top: 56px;               /* 水面 */
     width: 160px;
     height: 12px;
     overflow: hidden;
@@ -1295,10 +1296,10 @@ body.color-info-reveal .Hex-int-text {
     to   { transform: translate3d(-40px, 0, 0); }
 }
 
-/* 色球：在水面上一顆接一顆輕輕浮起 */
+/* 色球：在水面（波浪）下，一顆接一顆輕輕上下游動 */
 .loading-dot {
     position: absolute;
-    bottom: 9px;
+    top: 76px;
     left: var(--x);
     width: 9px;
     height: 9px;
@@ -1329,8 +1330,25 @@ body.color-info-reveal .Hex-int-text {
 }
 
 @keyframes loading-dot {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-7px); }
+    0%, 100% { transform: translateY(2px); }
+    50%      { transform: translateY(-5px); }
+}
+
+/* 載入完成、等訪客點擊進入（點這一下音樂也會開始） */
+#loading.loading-ready {
+    cursor: pointer;
+}
+
+#loading.loading-ready .loading-text {
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.6em;
+    padding-left: 0.6em;
+    animation: loading-ready 1.6s ease-in-out infinite;
+}
+
+@keyframes loading-ready {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
 }
 
 @keyframes loading-text {

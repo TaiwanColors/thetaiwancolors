@@ -6,13 +6,9 @@ window.addEventListener("load", function() {
     //好用偵測
    //console.log("Selected Color:", buttons);
     
-    // 從按鈕中隨機選擇一個
-    var randomIndex = Math.floor(Math.random() * buttons.length);
-    
-    var randomButton = buttons[randomIndex];
-
-    // 獲取隨機選擇的按鈕的背景顏色，包括透明度
-    var randomColor = window.getComputedStyle(randomButton).backgroundColor;
+    // 初始底色固定為 #4C4C4C（原本是隨機挑一顆色球的顏色）
+    // 還沒釣到魚之前，瓶子是空的、顏色資訊也先不顯示（fishing.js）
+    var randomColor = "rgb(76, 76, 76)";
 
     var backgrounds = document.querySelectorAll(".square");
     
@@ -36,52 +32,9 @@ window.addEventListener("load", function() {
 
     })();
 
-    // 新增白邊給選中的按鈕
-    randomButton.classList.add("active");
+    // （原本會把隨機挑中的色球設成目前的顏色，並填上它的色名、CMYK、RGB；
+    //   現在初始是固定底色，第一次釣到魚時才會有顏色資訊）
 
-    //console.log("buttom active");
-   
-    (function() {
-        // 獲取活動按鈕的 data-color 屬性值
-        var colorKey = randomButton.getAttribute("data-color");
-        var [color, number] = colorKey.match(/([a-zA-Z]+)(\d+)/).slice(1);
-        console.log("Color:", color);
-        console.log("Number:", number);
-
-        // 獲取對應的文字資料
-        var buttonTextMap;
-        switch (color) {
-            case "yellow":
-                buttonTextMap = yellowButtonTextMap;
-                break;
-            case "orange":
-                buttonTextMap = orangeButtonTextMap;
-                break;
-            case "red":
-                buttonTextMap = redButtonTextMap;
-                break;
-            case "purple":
-                buttonTextMap = purpleButtonTextMap;
-                break;
-            case "blue":
-                buttonTextMap = blueButtonTextMap;
-                break;
-            case "green":
-                buttonTextMap = greenButtonTextMap;
-                break;
-            case "theme":
-                buttonTextMap = themeButtonTextMap; // 主題色
-                break;
-            // 可以根據需要新增更多的顏色
-        }
-
-        // 獲取對應的資料
-        var data = buttonTextMap[number];
-
-        // 呼叫更新文字內容的函式
-        updateTextContent(data);
-    })();
-    
     function updateTextContent(data) {
         document.getElementById("ColorNames-link").textContent = data.colorName;
         document.getElementById("EnColorNames-link").textContent = data.enColorName;
@@ -98,7 +51,7 @@ window.addEventListener("load", function() {
     (function() {
        
         // 獲取按鈕的背景顏色
-        var buttonColor = getComputedStyle(randomButton).backgroundColor;
+        var buttonColor = randomColor;
 
         // 計算按鈕背景顏色的亮度和彩度
         var brightness = calculateBrightness(buttonColor);
@@ -202,7 +155,7 @@ window.addEventListener("load", function() {
     (function() {
         
             // 獲取按鈕的背景顏色
-            var buttonColor = getComputedStyle(randomButton).backgroundColor;
+            var buttonColor = randomColor;
 
             // 計算按鈕背景顏色的亮度和彩度
             var brightness = calculateBrightness(buttonColor);
