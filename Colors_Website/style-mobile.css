@@ -1,0 +1,174 @@
+/* 在小螢幕裝置上覆蓋預設樣式 */
+@media screen and (max-width: 768px) {
+    /*right*/
+    #logo {
+        width: 100px; /* 在小螢幕上設定不同的寬度 */
+        top:20px;
+        right:20px;
+        /* 可以根據需要修改其他樣式屬性 */
+    }
+
+    .Instagram-text {
+    top: 85px;
+    right: 20px;
+    }
+
+    .YouTube-text { 
+    top: 105px;
+    right: 20px;
+    }
+
+    .Threads-text {
+    top: 125px;
+    right: 20px;
+    }
+
+    #rainButton{
+    width: 45px;
+    height: 15px;
+    top: 170px ;
+    right:20px;
+    }
+
+    #snowButton{
+    width: 45px;
+    height: 15px;
+    top: 193px ;
+    right:20px;
+    }
+
+
+    #foggyButton{
+    width: 45px;
+    height: 15px;
+    top: 216px ;
+    right:20px;
+    }
+
+    #starryskyButton{
+    width: 45px;
+    height: 15px;
+    top: 239px;
+    right:20px;
+    }
+    
+    /*left*/
+    .ColorNames-text {
+        height: 42px;
+        font-size: 43px;    
+        top: 17px;
+        left: 20px;
+    }
+    
+    .EnColorNames-text {
+        height: 16px;
+        font-size: 20px;    
+        top: 61px;
+        left: 20px;
+    }
+
+    .C-text {
+        height: 11px;
+        font-size: 13px;    
+        top: 105px;
+        left: 20.8px;
+    }
+
+    .C-int-text {
+        height: 11px;
+        font-size: 13px;    
+        top: 105px;
+        left: 35px;
+    }
+
+    .M-text {
+        height: 11px;
+        font-size: 13px;    
+        top: 124px;
+        left: 20px;
+    }
+
+    .M-int-text {
+        height: 11px;
+        font-size: 13px;    
+        top: 124px;
+        left: 35px;
+    }
+
+    .Y-text {
+        height: 11px;
+        font-size: 13px;
+        top: 143px;
+        left: 21.5px;
+    }
+
+    .Y-int-text {
+        height: 11px;
+        font-size: 13px;
+        top: 143px;
+        left: 35px;
+    }
+
+    .K-text {
+        height: 11px;
+        font-size: 13px;
+        top: 162px;
+        left: 20.6px;
+    }
+
+    .K-int-text {
+        height: 11px;
+        font-size: 13px;
+        top: 162px;
+        left: 35px;
+    }
+
+    .R-text {
+        height: 11px;
+        font-size: 13px;
+        top: 190px;
+        left: 20px;
+    }
+
+    .R-int-text {
+        height: 11px;
+        font-size: 13px;
+        top: 190px;
+        left: 35px;
+    }
+
+    .G-text {
+        height: 11px;
+        font-size: 13px;
+        top: 209px;
+        left: 20px;
+    }
+
+    .G-int-text {
+        height: 11px;
+        font-size: 13px;
+        top: 209px;
+        left: 35px;
+    }
+
+    .B-text {
+        height: 11px;
+        font-size: 13px;
+        top: 228px;
+        left: 20px;
+    }
+
+    .B-int-text {
+        height: 11px;
+        font-size: 13px;
+        top: 228px;
+        left: 35px;
+    }
+
+    .Hex-int-text {
+        height: 11px;
+        font-size: 13px;
+        top: 256px;
+        left: 20px;
+    }
+}

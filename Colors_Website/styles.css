@@ -1,0 +1,1208 @@
+
+body { /*按鈕外容器*/
+    background-color: black; /* 設定初始的背景顏色為黑色 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 100%;
+    height: 97.5vh;
+
+    margin: 0; /* 去除預設的頁面邊距 */
+    border: 0px solid  #6ac1e7;/*外邊*/
+    overflow: hidden; 
+
+}
+
+html, body {
+    margin: 0; /* 去除預設的頁面邊距 */
+    height: 100%;
+    width: 100%;
+    overflow: hidden; 
+}
+/*right*/
+
+#logo{
+    width: 120px;
+    position: fixed;
+    top:32px;
+    right:32px;
+    transition:opacity ease-out 1s,color ease-out 1s;
+
+}
+
+
+
+.Instagram-text {
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:medium;
+    color: #d15090;
+    position: fixed;
+    
+    top: 120px;
+    right: 32px;
+    cursor: pointer;
+    z-index: 10;    
+    user-select: none;
+    transition:opacity ease-out 1s,fill ease-out 1s;
+}
+
+.YouTube-text {
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:medium;
+    color: #dd6666;
+    position: fixed;
+    top: 140px;
+    right: 32px;
+    cursor: pointer;
+    z-index: 10;    
+    user-select: none;
+    transition:opacity ease-out 1s,color ease-out 1s;
+}
+
+/* Threads：接在 IG（粉）→ YouTube（紅）之後，漸層到黃色 */
+.Threads-text {
+    font-size: 14px;
+    font-family: 'Noto Sans TC';
+    font-weight:medium;
+    color: #d0a339;
+    position: fixed;
+    top: 160px;
+    right: 32px;
+    cursor: pointer;
+    z-index: 10;
+    user-select: none;
+    transition:opacity ease-out 1s,color ease-out 1s;
+}
+
+
+
+#rainButton{
+    width: 45px;
+    height: 15px;
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    top: 230px ;
+    right:32px;
+    z-index: 10; 
+    overflow: hidden;
+    transition:opacity ease-out 1s;
+}
+
+.raindropB {
+    position: absolute;
+    width: 1px;
+    height: 2px;
+    z-index: 3;
+    background-color:  rgba(255, 255, 255, 0.4) ;/* 雨滴的顏色 */
+    animation: fall linear 0s; /* 雨滴下落動畫，可以根據需要調整持續時間 */
+}
+
+
+#snowButton{
+    width: 45px;
+    height: 15px;
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    top: 255px ;
+    right:32px;
+    z-index: 10; 
+    overflow: hidden;
+    transition:opacity ease-out 1s;
+}
+
+
+
+
+#foggyButton{
+    width: 45px;
+    height: 15px;
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    top: 280px ;
+    /* bottom: 30px;  */
+    right:32px;
+    z-index: 10; 
+    overflow: hidden;
+    transition:opacity ease-out 1s;
+}
+
+#starryskyButton{
+    width: 45px;
+    height: 15px;
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    top: 305px;
+    /* bottom: 30px;  */
+    right:32px;
+    z-index: 10; 
+    overflow: hidden;
+    transition:opacity ease-out 1s;
+}
+
+.starlightB_1 {/*按鈕的星星*/
+    position: absolute;
+    background-image: url('image/starlight_1.svg'); /* 設定星星的背景影像 */
+    background-size: cover;
+
+    z-index: 3;
+    fill: rgba(255, 255, 255, 0.4); /* 雨滴的顏色 */
+
+    animation: fall linear 1s; /* 雨滴下落動畫，可以根據需要調整持續時間 */
+}
+
+.starlightB_2 {/*按鈕的星星*/
+    position: absolute;
+    background-image: url('image/starlight_2.svg'); /* 設定星星的背景影像 */
+    background-size: cover;
+    fill: rgba(255, 255, 255, 0.4); /* 雨滴的顏色 */
+    z-index: 3;
+
+    animation: fall linear 1s; /* 雨滴下落動畫，可以根據需要調整持續時間 */
+}
+
+#starryskySButton{
+    width: 45px;
+    height: 15px;
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    top: 215px;
+    /* bottom: 30px;  */
+    right:33px;
+    z-index: 10; 
+    overflow: hidden;
+}
+
+.starlightSB_1 {/*按鈕的星星*/
+    position: absolute;
+    background-image: url('image/starlight_1.svg'); /* 設定星星的背景影像 */
+    background-size: cover;
+
+    z-index: 3;
+    fill: rgba(255, 255, 255, 0.4); /* 雨滴的顏色 */
+
+    animation: fall linear 1s; /* 雨滴下落動畫，可以根據需要調整持續時間 */
+}
+
+.starlightSB_2 {/*按鈕的星星*/
+    position: absolute;
+    background-image: url('image/starlight_2.svg'); /* 設定星星的背景影像 */
+    background-size: cover;
+    fill: rgba(255, 255, 255, 0.4); /* 雨滴的顏色 */
+    z-index: 3;
+
+    animation: fall linear 1s; /* 雨滴下落動畫，可以根據需要調整持續時間 */
+}
+
+.visibleicon {/*關閉顯示按鈕*/
+
+    width: 30px;
+    height: 20px;
+    position: absolute;
+    background-image: url('image/visibleicon.svg'); /* 設定星星的背景影像 */
+    background-size: cover;
+    bottom: 25px ;
+    right:25px;
+    z-index: 3;
+    animation: fall linear 1s; /* 雨滴下落動畫，可以根據需要調整持續時間 */
+    cursor: pointer;
+    
+}
+
+.hideicon {/*關閉顯示按鈕*/
+
+    width: 30px;
+    height: 20px;
+    position: absolute;
+    background-image: url('image/hideicon.svg'); /* 設定星星的背景影像 */
+    background-size: cover;
+    bottom: 25px ;
+    right:25px;
+    z-index: 2;
+    animation: fall linear 1s; /* 雨滴下落動畫，可以根據需要調整持續時間 */
+    cursor: pointer;
+    opacity: 0;
+    
+}
+
+
+/*left*/
+
+.ColorNames-text {
+
+    height: 50px;
+    font-size: 49.6px;    
+    font-family: 'Noto Serif TC';
+    font-weight:bold;
+    color: #ffffff;
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 45px;
+    letter-spacing: 2px;
+    top: 31px;
+    left: 33px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+    
+}
+
+.EnColorNames-text {
+
+    height: 25px;
+    font-size: 22px;    
+    font-family: 'Noto Sans TC';
+    font-weight:400;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    
+    border: 0px solid rgba(0, 0, 0, 0.4);/*外邊*/
+    line-height: 23px;
+
+    top: 82px;
+    left: 33px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+
+.C-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:700;
+    color: #ffffff;
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 10px;
+    letter-spacing: 2px;
+    top: 139px;
+    left: 34px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+.C-int-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:'Medium';
+    font-weight:500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.2);/*外邊*/
+    line-height: 10px;
+
+    top: 139px;
+    left: 50px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+
+.M-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:700;
+    color: #ffffff;
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 10px;
+    letter-spacing: 2px;
+    top: 159px;
+    left: 33px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+.M-int-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.2);/*外邊*/
+    line-height: 10px;
+
+    top: 159px;
+    left: 50px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+
+.Y-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:700;
+    color: #ffffff;
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 10px;
+    letter-spacing: 2px;
+    top: 179px;
+    left: 34.7px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+.Y-int-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.2);/*外邊*/
+    line-height: 10px;
+
+    top: 179px;
+    left: 50px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+
+.K-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:700;
+    color: #ffffff;
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 10px;
+    letter-spacing: 2px;
+    top: 199px;
+    left: 33.5px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+.K-int-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.2);/*外邊*/
+    line-height: 10px;
+
+    top: 199px;
+    left: 50px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+
+.R-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:700;
+    color: #ffffff;
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 10px;
+    letter-spacing: 2px;
+    top: 229px;
+    left: 33px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+.R-int-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.2);/*外邊*/
+    line-height: 10px;
+
+    top: 229px;
+    left: 50px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+
+.G-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:700;
+    color: #ffffff;
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 10px;
+    letter-spacing: 2px;
+    top: 249px;
+    left: 33px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+.G-int-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.2);/*外邊*/
+    line-height: 10px;
+
+    top: 249px;
+    left: 50px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+
+.B-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:700;
+    color: #ffffff;
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 10px;
+    letter-spacing: 2px;
+    top: 269px;
+    left: 33px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+.B-int-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    
+    border: 0px solid rgba(255, 255, 255, 0.2);/*外邊*/
+    line-height: 10px;
+
+    top: 269px;
+    left: 50px;
+    cursor: default;
+    z-index: 10;   
+    user-select: none;
+    transition:opacity ease-out 1s;
+}
+
+.Hex-int-text {
+
+    height: 12px;
+    font-size: 14px;    
+    font-family: 'Noto Sans TC';
+    font-weight:700;
+    color: #ffffff;
+    position: absolute;
+
+    border: 0px solid rgba(255, 255, 255, 0.4);/*外邊*/
+    line-height: 10px;
+
+    letter-spacing: 1px;
+    top: 301px;
+    left: 33px;
+    cursor: default;
+    z-index: 10;  
+    transition:opacity ease-out 1s; 
+    
+}
+
+
+/*以下是按鈕*/
+#button-container {
+    width: 120%; /* 設定容器寬度 */
+    height:33.3%; /* 設定容器高度 */
+    border:0px solid  #1d6189;/*外邊*/
+    position: fixed;
+    bottom: -30px;
+    transition: left 0.5s ease, top 0.5s ease; /* 新增過渡效果 */
+    z-index: 3;    
+    
+}
+
+.circle-button {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: #000000;
+    /* 位置由 fishing.js 每幀寫入 transform，所以 transform 不能有 transition */
+    transition: box-shadow 0.3s ease, opacity 1s ease;
+    z-index: 0;
+    position: fixed;
+    left: 0;
+    top: 0;
+    opacity: 0; /* 初始不可見，載入後淡入 */
+    will-change: transform;
+    pointer-events: none; /* 色球改用釣的，不能直接點 */
+}
+
+.circle-button::before {
+    content: "";
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    border:0px solid  #ffffff;/*外邊*/
+    top: 50%; /* 使用50%來垂直居中 */
+    left: 50%; /* 使用50%來水平居中 */
+    border-radius: 50%; /* 使偽元素變為圓形 */
+    transform: translate(-50%, -50%);
+    opacity: 0; /* 初始時偽元素不可見 */
+}
+
+.circle-button:hover::before {
+    opacity: 1;
+}
+
+.fade-out {
+    opacity: 0; /* 控制按鈕的不透明度，你可以調整此值以達到你想要的淡出效果 */
+}
+
+.circle-button.fade-in {
+    opacity: 1;
+
+}
+
+.circle-button.active {
+    /* 目前選中的顏色（裝在船上瓶子裡的那顆）：不加白框 */
+    box-shadow: none;
+}
+
+:root {
+    --button-bg-color: #000000; /* 初始值，可以是任何顏色 */
+  }
+
+   
+.square {
+    width: 100%; /* 設定寬度為頁面的100% */
+    height: 100vh; /* 設定高度為視口的100% */
+    background-color: var(--button-bg-color); /* 使用變數來設定顏色 */
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    top: 0;
+    transition: background-color 2.5s;  
+}
+
+
+
+
+  .wave {
+    box-sizing: border-box;
+    width: 100%;
+   
+    position: fixed;
+    
+    z-index: 2;
+    pointer-events: none;
+    border: 0px solid  #680aab;/*外邊*/
+     top: 0; /* 設定top屬性 */
+    left: 0; /* 設定left屬性 */
+    bottom:0px;
+  }
+  
+  .wave2 {
+    box-sizing: border-box;
+    width: 100%;
+    position: absolute;
+    
+    z-index: 0;
+    pointer-events: none;
+    border: 0px solid  #7d539b;/*外邊*/
+    top: 0; /* 設定top屬性 */
+    left: 0; /* 設定left屬性 */
+    bottom:0px;
+  }
+  
+
+  #boat_soft_light_container {
+    width: 190px; /* 設定影像寬度 */
+    height:95px;
+    border: 0px solid #39b70b; /* 外邊框樣式 */
+    bottom: calc(32.33% - 30px); /* 1/3 高度的一半減去容器高度的一半 */
+    position: absolute;
+    z-index: 1;
+   
+}
+
+#boat_container_from {
+    width: 190px; /* 設定影像寬度 */
+    height:95px;
+    border: 0px solid #0b83b7; /* 外邊框樣式 */
+    bottom: calc(32.33% - 30px); /* 1/3 高度的一半減去容器高度的一半 */
+    position: absolute;
+    z-index: 1;
+    
+}
+
+#boat_soft_light{
+    height: auto; /* 讓高度按比例自動調整 */
+    border:0px solid  #0b83b7;/*外邊*/
+    z-index: 1;
+    position: fixed;
+    pointer-events: none;
+    user-select: none;
+    opacity:0.12;
+    transition: filll 0.01s ease,opactity 0.1s ease;
+    z-index: 1;
+
+}
+
+
+
+#boat_from{
+
+    height: auto; /* 讓高度按比例自動調整 */
+    border:0px solid  #0b83b7;/*外邊*/
+    z-index: 1;
+    position: fixed;
+    pointer-events: none;
+    user-select: none;
+}
+
+#boatlight_container{
+    width: 190px; /* 設定影像寬度 */
+    height:95px;
+    bottom: calc(32.33% - 30px);
+    border:0px solid  #0b83b7;/*外邊*/
+    position: fixed;
+    pointer-events: none;
+    user-select: none;
+    
+}
+
+/* styles.css */
+#boatlight {
+    width: 35px; /* 設定影像寬度 */
+    height:35px;
+    left:23px;
+    border:0px solid  #0b83b7;/*外邊*/
+    z-index: 1;
+    
+    position: fixed;
+    pointer-events: none;
+    user-select: none;
+    /* 船燈鐘擺：原本 JS 每幀計算，改由 CSS 動畫交給 GPU */
+    animation: lantern-swing 5s ease-in-out infinite;
+}
+
+@keyframes lantern-swing {
+    0%    { transform: rotate(0deg); }
+    12.5% { transform: rotate(10deg); }
+    25%   { transform: rotate(0deg); }
+    37.5% { transform: rotate(-10deg); }
+    50%   { transform: rotate(0deg); }
+    62.5% { transform: rotate(-10deg); }
+    75%   { transform: rotate(0deg); }
+    87.5% { transform: rotate(10deg); }
+    100%  { transform: rotate(0deg); }
+}
+
+/* ===== 釣魚（fishing.js） ===== */
+:root {
+    --fishing-line: rgba(0, 0, 0, 0.4);
+}
+
+body {
+    touch-action: none; /* 手機上拖曳放鉤時不要觸發捲動或下拉重新整理 */
+}
+
+#boat_container_from,
+#button-container,
+#boat_soft_light_container,
+#boatlight_container {
+    will-change: transform;
+}
+
+#fishing-layer {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.fishing-line {
+    fill: none;
+    stroke: var(--fishing-line);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 0 6; /* 圓頭 + 0 長度虛線 = 一串小圓點，跟原本的點點線一樣 */
+}
+
+.fishing-hook {
+    fill: none;
+    stroke: var(--fishing-line);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+}
+
+.fishing-splash {
+    fill: none;
+    stroke: var(--fishing-line);
+    stroke-width: 1;
+}
+
+
+
+
+.point {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.4);
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+}
+
+.point2 {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.4);
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+
+#rainingcontainer {
+    border:0px solid  #0b83b7;/*外邊*/
+    position: fixed;
+    width: 100%;
+    height: 80%; /* 要比海面低，雨雪才碰得到海面（海面約在 69~71%） */
+    top:0;
+    overflow: hidden;
+    z-index: 3;
+    pointer-events: none;
+  }
+  
+  .raindrop {
+    position: absolute;
+    width: 1px;
+    height: 2px;
+    z-index: 3;
+    animation: fall linear 2s; /* 雨滴下落動畫，可以根據需要調整持續時間 */
+  }
+
+  #snowingcontainer {
+    border:0px solid  #0b83b7;/*外邊*/
+    position: fixed;
+    width: 100%;
+    height: 80%; /* 要比海面低，雨雪才碰得到海面（海面約在 69~71%） */
+    top:0;
+    overflow: hidden;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+
+ #foggycontainer {
+    border:0px solid  #4a0bb7;/*外邊*/
+    position: fixed;
+    width: 100%;
+    height: 100%; /* 霧從天空鋪到水面下方 */
+    top:0px;
+    overflow: hidden;
+    z-index: 3;
+    pointer-events: none;
+  }
+  
+/* ===== 顏色資訊（fishing.js 控制） =====
+   還沒釣到第一條魚之前：不顯示顏色標題、副標、CMYK、RGB */
+body.awaiting-catch .ColorNames-text,
+body.awaiting-catch .EnColorNames-text,
+body.awaiting-catch .C-text,
+body.awaiting-catch .M-text,
+body.awaiting-catch .Y-text,
+body.awaiting-catch .K-text,
+body.awaiting-catch .R-text,
+body.awaiting-catch .G-text,
+body.awaiting-catch .B-text,
+body.awaiting-catch .C-int-text,
+body.awaiting-catch .M-int-text,
+body.awaiting-catch .Y-int-text,
+body.awaiting-catch .K-int-text,
+body.awaiting-catch .R-int-text,
+body.awaiting-catch .G-int-text,
+body.awaiting-catch .B-int-text {
+    visibility: hidden;
+}
+
+/* 釣到魚時（第一次與之後每次換色）：標題、副標、CMYK、RGB、色碼一起淡入 */
+body.color-info-reveal .ColorNames-text,
+body.color-info-reveal .EnColorNames-text,
+body.color-info-reveal .C-text,
+body.color-info-reveal .M-text,
+body.color-info-reveal .Y-text,
+body.color-info-reveal .K-text,
+body.color-info-reveal .R-text,
+body.color-info-reveal .G-text,
+body.color-info-reveal .B-text,
+body.color-info-reveal .C-int-text,
+body.color-info-reveal .M-int-text,
+body.color-info-reveal .Y-int-text,
+body.color-info-reveal .K-int-text,
+body.color-info-reveal .R-int-text,
+body.color-info-reveal .G-int-text,
+body.color-info-reveal .B-int-text,
+body.color-info-reveal .Hex-int-text {
+    animation: color-info-in 1.2s ease;
+}
+
+@keyframes color-info-in {
+    from { opacity: 0; }
+}
+
+/* ===== 船上的瓶子（fishing.js） =====
+   圖層順序：船(1) → 玻璃本體＋瓶中的水(2) → 玻璃邊緣與反光(2) → 色球(3)，色球在最前面不被遮住
+   瓶子在船緣以下的部分由 fishing.js 用 clip-path 裁掉，露出原本的船 */
+.bottle-water {
+    position: fixed;
+    z-index: 2;
+    pointer-events: none;
+    overflow: visible;
+    will-change: transform;
+}
+
+/* 瓶中的水跟海同色（fishing.js 算出 --sea-color），換色時跟背景一樣 2.5 秒漸變 */
+.bottle-water .water-body {
+    fill: var(--sea-color, rgba(0, 0, 0, 0.1));
+    transition: fill 2.5s;
+}
+
+.bottle-water .water-line {
+    fill: none;
+    stroke: var(--water-line, rgba(255, 255, 255, 0.55));
+    stroke-width: 0.7;
+    stroke-linecap: round;
+}
+
+.bottle-glass {
+    position: fixed;
+    z-index: 2;
+    pointer-events: none;
+    user-select: none;
+    overflow: visible;
+    will-change: transform;
+}
+
+/* 玻璃邊緣：顏色由 fishing.js 依背景亮暗設定 */
+.bottle-glass .glass-edge,
+.bottle-glass .glass-rim {
+    fill: none;
+    stroke: var(--glass-edge, rgba(255, 255, 255, 0.6));
+    stroke-width: 1.1;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.bottle-glass .glass-rim {
+    stroke-width: 0.8;
+}
+
+/* 瓶身左側的反光 */
+.bottle-glass .glass-shine {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.75);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+}
+
+/* ===== 雨、雪（weather.js，canvas 繪製） ===== */
+.weather-canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* 按鈕裡的小雨／小雪：關著時 40%，打開時 100% */
+.weather-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.4;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+}
+
+/* ===== 霧（fog.js，WebGL 程式生成） ===== */
+/* 畫布是螢幕的 1/2 解析度，由瀏覽器平滑放大 */
+#fog-canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* 按鈕裡的小霧：同一個 WebGL 霧的縮小版（fog.js） */
+.fog-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.4;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+}
+
+
+
+  #starryskycontainer {
+    border:0px solid  #0b83b7;/*外邊*/
+    position: fixed;
+    width: 100%;
+    height: 80%;
+    top:-10%;
+    overflow: hidden;
+    z-index: 0; /* 星空在船後面（船是 1） */
+    pointer-events: none;
+  }
+
+
+.starlight_1 {
+    z-index: 1;
+    background-image: url('image/starlight_1.svg'); /* 設定星星的背景影像 */
+    background-size: cover;
+    position: absolute;
+}
+
+
+.starlight_2 {
+    z-index: 1;
+    background-image: url('image/starlight_2.svg'); /* 設定星星的背景影像 */
+    background-size: cover;
+    position: absolute;
+}
+
+
+.starlight_3 {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    z-index: 1;
+    background-color: rgba(255, 255, 255, 0);
+    transition: background-color 1s, opacity 1s;
+    /* border-radius: 50%; */
+    
+  }
+
+  .starlightB_3 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    z-index: 1;
+    background-color: rgba(255, 255, 255,0.4); /* 雨滴的顏色 */
+    transition: background-color 1s, opacity 1s;
+    /* border-radius: 50%; */
+    
+  }
+
+.meteor_1 {
+    position: absolute;
+    width: 2px; /* 流星的寬度 */
+    height: 2px; /* 流星的高度 */
+    background-color: #fffc30; /* 流星的顏色 */
+    rotate: -45deg;
+    z-index: 1;
+    animation: meteorAnimation 1.2s linear infinite;
+    
+}
+
+
+
+.meteor_1::before {
+    content: '';
+    position: absolute;
+    border:0px solid  #0b83b7;/*外邊*/
+    width:  var(--pseudo-element-width); /* 流星的寬度 */
+    height: 3px; /* 尾巴的高度 */
+    background: linear-gradient(to right, #fffc3051, #fc1e6f38,#c800ff28,#7700ff0b);
+    animation: height 2s ease-out , width 2s ease-out;
+    top: 0; /* 位於流星底部 */
+    
+   
+  }
+
+  .meteor_2 {
+    position: absolute;
+    width:2px;
+    height: 2px; /* 流星的高度 */
+    background-color: #99dfff; /* 流星的顏色 */
+    rotate: -45deg;
+    z-index:1;
+    animation: meteorAnimation 1.2s linear infinite ;
+    --pseudo-element-width: 60px;
+}
+
+.meteor_2::before {
+    content: '';
+    position: absolute;
+    border:0px solid  #0b83b7;/*外邊*/
+    width:  var(--pseudo-element-width); /* 流星的寬度 */
+    height: 3px; /* 尾巴的高度 */
+    background: linear-gradient(to right, #79ff583a, #ffca461d,#ff7a2d25,#ff238d0b);
+    top: 0; /* 位於流星底部 */
+    
+   
+  }
+
+  .meteor_3 {
+    position: absolute;
+    width:2px;
+    height: 2px; /* 流星的高度 */
+    background-color: #ff3131; /* 流星的顏色 */
+    rotate: -45deg;
+    z-index: 1;
+    animation: meteorAnimation 1.2s linear infinite ,height 1s ease , width 1s ease;
+    --pseudo-element-width: 60px;
+}
+
+.meteor_3::before {
+    content: '';
+    position: absolute;
+    border:0px solid  #0b83b7;/*外邊*/
+    width:  var(--pseudo-element-width); /* 流星的寬度 */
+    height: 3px; /* 尾巴的高度 */
+    background: linear-gradient(to right, #ff8e2b51, #c6ff4138,#5cff6120,#69ff960b);
+    top: 0; /* 位於流星底部 */
+    
+  }
+
+  .meteorB_4 {
+    position: absolute;
+    width:1px;
+    height: 1px; /* 流星的高度 */
+    background-color: #ffffff; /* 流星的顏色 */
+    rotate: -45deg;
+    z-index: 1;
+    animation: meteorAnimation 1.2s linear infinite ,height 1s ease , width 1s ease;
+    --pseudo-element-width: 60px;
+}
+
+.meteorB_4::before {
+    content: '';
+    position: absolute;
+    border:0px solid  #0b83b7;/*外邊*/
+    width:  var(--pseudo-element-width); /* 流星的寬度 */
+    height: 1px; /* 尾巴的高度 */
+    background: linear-gradient(to right, #ffffff51, #ffffff12);
+    top: 0; /* 位於流星底部 */
+    
+}
+
+  @keyframes twinkling {
+    0% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes meteorAnimation {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-800px); /* 向左下方向移動 */
+
+  }}
+
+  @keyframes meteorBAnimation {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(-50px); /* 向左下方向移動 */
+  
+    }}
+
+
+
+
+
+/* 新增JavaScript部分，點選時更改背景顏色 */
+.circle-button.clicked {
+    background-color: inherit;
+}
+
+
+
+
+
+/* 亂數在容器內*/

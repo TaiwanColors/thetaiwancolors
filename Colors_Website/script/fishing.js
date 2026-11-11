@@ -1,0 +1,758 @@
+/*
+ * fishing.js — 釣魚互動 + 色球魚群
+ *
+ * 整個畫面的動態（船晃動、24 顆色球游動、釣線、魚鉤）都在「同一個」
+ * requestAnimationFrame 迴圈裡完成，每幀只寫 transform / SVG 屬性，
+ * 不讀取版面（getBoundingClientRect 只在載入與 resize 時量一次）。
+ *
+ * 玩法：
+ *   1. 移動魚鉤（滑鼠：跟著游標；手機：手指點／拖曳）到色球的位置。
+ *   2. 點一下 = 提竿，釣線往上彈。鉤子碰到色球就會把它一起甩上空中；
+ *      沒碰到也會彈，只是空鉤。
+ *   3. 色球在空中受重力往下掉，玩家左右移動（手機：按住拖曳）控制落點；
+ *      在空中可以再點一下多彈一次。每次出水最多彈 2 次（含第一次），以免太高。
+ *      彈完後鉤子會慢慢回到游標，不會一下子被拉回去。
+ *   手機（像拉彈弓）：按住拖曳瞄準，鉤子停在手指上方 40px；放開 = 提竿。
+ *      色球在空中時，在螢幕任何地方左右滑動，色球照滑動量移動；快速點一下 = 再彈一次。
+ *      手機上鉤到範圍與船的接住範圍放寬一點，鉤到、落船時會震動（Android）。
+ *   4. 掉進船裡才算釣到 → 換成這個顏色，船上原本那顆被丟回水裡；
+ *      掉回水裡就是失敗，色球游走。一次只能甩一顆。
+ */
+window.addEventListener("load", function () {
+    "use strict";
+
+    // ===== 可調參數 =====
+    const CFG = {
+        rodTip:   { x: -9, y: 0 },    // 竿尖相對於船容器中心的位移 (px)（量自船的圖）
+        holdSpot: { x: -34, y: 14 },  // 瓶子（釣上來的色球）在船上的位置（相對於船中心）
+        bottle: {
+            scale: 0.76,              // bottle.svg 每個單位 = 幾 px（瓶身約 25px 寬）
+            bottomOffset: 13,         // 瓶底在色球中心下方幾 px（瓶底會沉到船緣後面，被船身蓋住）
+            waterLevel: 15,           // 水面高度（bottle.svg 的 y 單位，越小水越多）
+        },
+        boatCatch: { x: 2, halfWidth: 78 }, // 船上「接得住」的範圍：中心偏移與半寬 (px)
+        swayAmpX: 10,                 // 船左右晃動幅度
+        swayAmpY: 5,                  // 船上下晃動幅度
+        swayOmega: 1.2,               // 船晃動角速度 (rad/s)
+        fishSpeed: 42,                // 色球基礎游速 (px/s)
+        hookOmega: 7,                 // 魚鉤彈簧的自然頻率
+        hookZeta: 0.55,               // 魚鉤彈簧阻尼（<1 會微微擺盪）
+        touchLinger: 4,               // 手指離開後鉤子停留時間 (s)
+        catchRadius: 18,              // 提竿時鉤子離色球多近才算鉤到 (px)
+        // ---- 手機（觸控）----
+        touchHookLift: 40,            // 鉤子停在手指上方幾 px（手指才不會擋住鉤子和色球）
+        touchCatchRadius: 26,         // 觸控時鉤到色球的範圍（手指比滑鼠不精準，放寬一點）
+        touchBoatBonus: 16,           // 觸控時船的接住範圍再加寬幾 px
+        touchSteerGain: 1.3,          // 空中左右滑動的靈敏度（手指滑 1px，色球移動幾 px）
+        tapMaxMove: 12,               // 移動不超過幾 px、
+        tapMaxTime: 0.3,              //   而且在幾秒內放開，才算「點一下」
+        yankImpulse: 1380,            // 空鉤提竿往上彈的初速 (px/s)，約彈高 255px
+        reYankImpulse: 800,           // 空鉤在空中再點一下的初速 (px/s)，約再彈 100px
+        maxYanks: 2,                  // 每次出水最多彈幾次（含第一次）
+        topMargin: 30,                // 鉤子最高只到離畫面頂端這麼遠 (px)
+        recoverTime: 1.2,             // 彈完後「慢慢回到游標」花的時間 (s)
+        recoverOmega: 1.2,            // 回程一開始的彈簧頻率（越小越慢）
+        flyApex: 110,                 // 鉤到色球時，甩到竿尖上方多高 (px)
+        flyReboost: 100,              // 色球在空中再點一下，往上再彈多高 (px)
+        flyGravity: 1300,             // 色球在空中的重力 (px/s²)
+        steerOmega: 5,                // 空中左右控制的靈敏度（越大越跟手）
+        ropeSegments: 18,             // 釣線分幾節（越多越柔軟，也越耗效能）
+        ropeGravity: 90,              // 釣線在水中的重力 (px/s²)
+        ropeDrag: 2.5,                // 水的阻力（越大線越「拖」）
+        ropeIterations: 8,            // 繩長約束迭代次數（越多越不會被拉長）
+    };
+    // 點這些介面元素時不提竿、不放鉤
+    const UI_SELECTOR = "#rainButton,#snowButton,#foggyButton,#starryskyButton," +
+        "#visibleIcon,#hideIcon,#logo,.Instagram-text,.YouTube-text,.Threads-text";
+
+    const boatEl = document.getElementById("boat_container_from");
+    const container = document.getElementById("button-container");
+    const swayEls = [
+        boatEl,
+        container,
+        document.getElementById("boat_soft_light_container"),
+        document.getElementById("boatlight_container"),
+    ].filter(Boolean);
+    const fishEls = Array.from(container.querySelectorAll(".circle-button"));
+    if (!boatEl || fishEls.length === 0) return;
+
+    // ===== SVG 圖層：一條釣線 + 一個魚鉤 + 水花 =====
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.id = "fishing-layer";
+    const linePath = document.createElementNS(NS, "path");
+    linePath.classList.add("fishing-line");
+    const hookPath = document.createElementNS(NS, "path");
+    hookPath.classList.add("fishing-hook");
+    // J 字形魚鉤：原點是綁線的地方，往下彎成鉤
+    hookPath.setAttribute("d", "M0,0 V7 a3.5,3.5 0 0 1 -7,0 v-2");
+    svg.appendChild(linePath);
+    svg.appendChild(hookPath);
+    const splashes = [0, 1, 2].map(function () {
+        const c = document.createElementNS(NS, "circle");
+        c.classList.add("fishing-splash");
+        c.setAttribute("r", "0");
+        svg.appendChild(c);
+        return { el: c, x: 0, y: 0, t: -1 };
+    });
+    document.body.appendChild(svg);
+
+    // ===== 小工具 =====
+    const TAU = Math.PI * 2;
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+    const angleDiff = (a, b) => {
+        let d = (a - b) % TAU;
+        if (d > Math.PI) d -= TAU;
+        if (d < -Math.PI) d += TAU;
+        return d;
+    };
+    // 拋物線：p∈[0,1]，H 為最高點比起點終點高出多少
+    const arc = (p, H) => 4 * H * p * (1 - p);
+
+    function splash(x, y) {
+        const s = splashes.find((s) => s.t < 0) || splashes[0];
+        s.x = x; s.y = y; s.t = 0;
+    }
+
+    // ===== 版面量測（只在載入與 resize 時做） =====
+    // 「基準座標」= 頁面座標扣掉船的晃動。色球容器跟船一起晃，
+    // 所以色球用基準座標記錄，畫的時候只要扣掉容器原點即可。
+    let vw, vh, boatCX, boatCY, originX, originY, fishR;
+    let swayX = 0, swayY = 0;
+    const B = { l: 0, r: 0, t: 0, b: 0 }; // 色球活動範圍（基準座標）
+
+    // ===== 船上的瓶子：釣到的色球裝在裡面 =====
+    // 後層：水（用瓶子形狀裁切），在色球後面；前層：玻璃（image/bottle.svg），蓋在色球前面
+    // 座標用 bottle.svg 的 viewBox 單位（45.46 × 53）
+    const BOTTLE_W = 45.46, BOTTLE_H = 53;
+    const BOTTLE_PATH = "M32.51,5.83c.35,0,.68.16.9.43.39.5.31,1.22-.19,1.61l-.96.76c-1.27,1-1.15,2.74.21,3.64,4.31,2.84,7.06,7.37,6.9,12.47-.24,7.85,3.81,22.43-16.64,22.43S6.33,32.59,6.09,24.74c-.16-5.1,2.59-9.63,6.9-12.47,1.36-.9,1.48-2.64.21-3.64l-.96-.76c-.5-.39-.58-1.11-.19-1.61.22-.27.55-.43.9-.43h19.56Z";
+    const BOTTLE_BOTTOM = 47.07;   // 瓶底在 viewBox 裡的 y
+    const BOTTLE_CX = 22.73;       // 瓶身中心在 viewBox 裡的 x
+    const bottleBack = document.createElementNS(NS, "svg");
+    bottleBack.setAttribute("viewBox", "0 0 " + BOTTLE_W + " " + BOTTLE_H);
+    bottleBack.setAttribute("class", "bottle-water");
+    // 後層由下而上：玻璃本體（image/bottle.svg）→ 水（不透明、跟海同色，蓋住玻璃本體的白色）
+    bottleBack.innerHTML =
+        '<image href="image/bottle.svg" width="' + BOTTLE_W + '" height="' + BOTTLE_H + '"/>' +
+        '<defs><clipPath id="bottle-clip"><path d="' + BOTTLE_PATH + '"/></clipPath></defs>' +
+        '<g clip-path="url(#bottle-clip)"><path class="water-body"/><path class="water-line"/></g>';
+    const waterBody = bottleBack.querySelector(".water-body");
+    const waterLine = bottleBack.querySelector(".water-line");
+    // 前層：玻璃邊緣 ＋ 一道高光（玻璃本體放在後層，才不會把水染白）
+    // 邊緣顏色跟著背景切換（亮背景用深邊、暗背景用淺邊），白底上也看得到瓶子
+    const bottleGlass = document.createElementNS(NS, "svg");
+    bottleGlass.setAttribute("viewBox", "0 0 " + BOTTLE_W + " " + BOTTLE_H);
+    bottleGlass.setAttribute("class", "bottle-glass");
+    bottleGlass.innerHTML =
+        '<path class="glass-edge" d="' + BOTTLE_PATH + '"/>' +
+        '<path class="glass-rim" d="M13.2,8.6 H32.2"/>' +                       // 瓶口下緣
+        '<path class="glass-shine" d="M11.6,17.2 C9.1,19.6 8.4,24.8 9.4,30.6"/>'; // 瓶身左側的反光
+    // 船緣的上緣（量自船的原圖，boat_container_from 內的座標）：x 每 2px 一個點，值是船緣頂端的 y。
+    // 瓶子在這條線以下的部分會被裁掉，露出原本的船 → 看起來是「放在」船裡，
+    // 而且顏色跟船完全一樣（船上有疊船燈光暈與海浪，複製一份船去蓋會變色）。
+    // x 約 126~150 是漁夫，那一段的值比較小；瓶子不要移到那裡。
+    const RIM = [29.5, 29.5, 22.5, 17.5, 44.8, 48.8, 51.5, 54, 55.8, 57.2, 58.5, 59.5, 60.5, 61.2, 62, 62.8, 63.2, 64,
+        64.5, 65, 65.5, 66, 66.2, 66.8, 67, 67.5, 67.8, 68, 68.5, 68.8, 69, 69.2, 69.5, 69.8, 69.8, 70, 70.2, 70.5, 70.5,
+        70.8, 70.8, 71, 71, 71.2, 71.2, 71.5, 71.5, 71.5, 71.8, 71.8, 71.8, 71.8, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72,
+        72, 71.2, 67.8, 66.2, 64.5, 52.5, 51.5, 43, 43.2, 51.2, 51.5, 52.8, 63, 71.2, 71, 70.8, 70.5, 70, 69.8, 69.2, 68.5,
+        68, 67.2, 66.5, 65.8, 64.8, 63.8, 62.5, 61.8, 67.2, 67.5, 61.5, 63.5, 63.5];
+    const rimY = function (x) { // x：船容器內的 px
+        const i = Math.max(0, Math.min(RIM.length - 1.001, x / 2)), i0 = Math.floor(i), f = i - i0;
+        return RIM[i0] + (RIM[i0 + 1] - RIM[i0]) * f;
+    };
+
+    // 圖層順序：玻璃本體＋水 → 玻璃邊緣與反光（都在 z-index 2）→ 色球（3），色球不會被瓶子蓋到
+    document.body.appendChild(bottleBack);
+    document.body.appendChild(bottleGlass);
+    swayEls.push(bottleBack, bottleGlass); // 跟船一起晃
+
+    // 把瓶子放到船上：瓶身中心對齊色球的位置，瓶底在色球下方 bottle.bottomOffset px
+    function placeBottle() {
+        const s = CFG.bottle.scale;
+        const left = boatCX + CFG.holdSpot.x - BOTTLE_CX * s;
+        const top = boatCY + CFG.holdSpot.y + CFG.bottle.bottomOffset - BOTTLE_BOTTOM * s;
+        const w = BOTTLE_W * s, h = BOTTLE_H * s;
+        [bottleBack, bottleGlass].forEach(function (el) {
+            el.style.left = left.toFixed(1) + "px";
+            el.style.top = top.toFixed(1) + "px";
+            el.style.width = w.toFixed(1) + "px";
+            el.style.height = h.toFixed(1) + "px";
+        });
+        // 裁掉船緣以下的部分：多邊形上緣是瓶子的頂、下緣沿著船緣
+        const bw = boatEl.offsetWidth || 190, bh = boatEl.offsetHeight || 95;
+        const bx = boatCX - bw / 2, by = boatCY - bh / 2;
+        const pts = ["0px 0px", w.toFixed(1) + "px 0px"];
+        for (let x = w; x >= -0.01; x -= w / 12) {
+            const y = by + rimY(left + x - bx) - top;
+            pts.push(x.toFixed(1) + "px " + y.toFixed(1) + "px");
+        }
+        const clip = "polygon(" + pts.join(",") + ")";
+        bottleBack.style.clipPath = clip;
+        bottleGlass.style.clipPath = clip;
+    }
+
+    function measure() {
+        vw = window.innerWidth;
+        vh = window.innerHeight;
+        const b = boatEl.getBoundingClientRect();
+        boatCX = b.left + b.width / 2 - swayX;
+        boatCY = b.top + b.height / 2 - swayY;
+        const c = container.getBoundingClientRect();
+        originX = c.left - swayX;
+        originY = c.top - swayY;
+        fishR = (fishEls[0].offsetWidth || 15) / 2;
+        B.l = 14; B.r = vw - 14;
+        B.t = Math.min(originY + 16, vh - 60); B.b = vh - 14;
+        placeBottle();
+    }
+    measure();
+    window.addEventListener("resize", measure);
+
+    // ===== 色球（魚）資料 =====
+    // 轉向用「多個正弦相加」當作平滑雜訊：每顆魚頻率、相位不同，
+    // 是封閉公式，不需要每幀擲亂數，也不會抖動。
+    const fish = fishEls.map(function (el) {
+        return {
+            el: el,
+            x: rand(B.l, B.r), y: rand(B.t, B.b),
+            h: rand(0, TAU),           // 游動方向
+            kick: 0,                   // 擺尾力度 0~1
+            f1: rand(0.3, 0.7), p1: rand(0, TAU),
+            f2: rand(1.1, 1.9), p2: rand(0, TAU),
+            fb: rand(1.6, 2.6), pb: rand(0, TAU),
+            flee: 0,                   // 受驚加速剩餘時間
+            mode: "swim",              // swim | hooked | held | toss
+            splashEnd: true,           // toss 落點要不要濺水花
+            // 拋物線動畫用
+            ax: 0, ay: 0, bx: 0, by: 0, at: 0, aT: 1, aH: 0,
+        };
+    });
+
+    // 還沒釣到第一條魚之前，不顯示顏色標題、副標、CMYK、RGB（第一次落進瓶子時才淡入）
+    document.body.classList.add("awaiting-catch");
+
+    let held = fish.find((f) => f.el.classList.contains("active")) || null;
+    if (held) {
+        held.mode = "held";
+        held.x = boatCX + CFG.holdSpot.x;
+        held.y = boatCY + CFG.holdSpot.y;
+        setLineColor(window.getComputedStyle(held.el).backgroundColor);
+    }
+
+    function setLineColor(bg) {
+        const m = (bg || "").match(/\d+/g);
+        if (!m) return;
+        const brightness = (m[0] * 299 + m[1] * 587 + m[2] * 114) / 1000;
+        const dark = brightness < 190;
+        const root = document.documentElement.style;
+        root.setProperty("--fishing-line", dark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.4)");
+        // 瓶子：暗背景用淺色邊、白水；亮背景用深色邊、淡藍灰的水，才看得到
+        root.setProperty("--glass-edge", dark ? "rgba(255, 255, 255, 0.6)" : "rgba(0, 0, 0, 0.3)");
+        // 瓶中的水 = 海的顏色：海是背景色疊兩層 5% 黑的浪（waves.js），等於背景色 × 0.95 × 0.95
+        const SEA = 0.95 * 0.95;
+        root.setProperty("--sea-color", "rgb(" + Math.round(m[0] * SEA) + "," + Math.round(m[1] * SEA) + "," + Math.round(m[2] * SEA) + ")");
+        root.setProperty("--water-line", dark ? "rgba(255, 255, 255, 0.55)" : "rgba(70, 95, 120, 0.4)");
+    }
+
+    // ===== 指標輸入 =====
+    let px = 0, py = 0;
+    let mouseInside = false;
+    let touchDown = false, touchUntil = 0;
+    let lastPointer = "mouse";
+    let clickPending = false, clickTouch = false;
+    // 手機震動回饋（Android 才有；iPhone 的瀏覽器不支援，會直接略過）
+    function buzz(pattern) {
+        if (lastPointer === "mouse" || !navigator.vibrate) return;
+        try { navigator.vibrate(pattern); } catch (e) { /* 不支援就略過 */ }
+    }
+    const nowS = () => performance.now() / 1000;
+
+    // 手機操作（像拉彈弓）：
+    //   鉤子在水裡 → 按住拖曳瞄準（鉤子在手指上方），放開 = 提竿
+    //   色球／空鉤在空中 → 左右滑動照滑動量移動色球；快速點一下 = 再彈一次
+    let touchMode = null;          // "aim" 瞄準 | "steer" 空中操控
+    let lastTouchX = 0, touchDownX = 0, touchDownY = 0, touchDownT = 0;
+    let touchSteerX = 0;           // 空中時色球要去的 x（由滑動量累加）
+    const isInAir = () => state === "fly" || state === "land" ||
+        ((state === "idle" || state === "cooldown") && airYanks > 0);
+
+    window.addEventListener("pointermove", function (e) {
+        if (e.pointerType === "mouse") {
+            px = e.clientX; py = e.clientY; lastPointer = "mouse"; mouseInside = true;
+            return;
+        }
+        if (!touchDown || !e.isPrimary) return;
+        const dx = e.clientX - lastTouchX;
+        lastTouchX = e.clientX;
+        px = e.clientX; py = e.clientY;
+        touchUntil = nowS() + CFG.touchLinger;
+        if (touchMode === "steer" && state === "fly") {
+            touchSteerX = clamp(touchSteerX + dx * CFG.touchSteerGain, 8, vw - 8);
+        }
+    }, { passive: true });
+    window.addEventListener("pointerdown", function (e) {
+        if (e.target && e.target.closest && e.target.closest(UI_SELECTOR)) return;
+        lastPointer = e.pointerType;
+        if (e.pointerType === "mouse") {
+            px = e.clientX; py = e.clientY; mouseInside = true;
+            clickPending = true; clickTouch = false; // 滑鼠：點一下 = 提竿
+            return;
+        }
+        if (!e.isPrimary) return;
+        touchDown = true;
+        touchUntil = nowS() + CFG.touchLinger;
+        lastTouchX = touchDownX = e.clientX; touchDownY = e.clientY; touchDownT = nowS();
+        if (isInAir()) {
+            touchMode = "steer";
+        } else {
+            touchMode = "aim";
+            px = e.clientX; py = e.clientY;
+        }
+    }, { passive: true });
+    const touchEnd = function (e) {
+        if (e.pointerType === "mouse" || !e.isPrimary || !touchDown) return;
+        touchDown = false;
+        touchUntil = nowS() + CFG.touchLinger;
+        if (e.type === "pointerup") {
+            const moved = Math.hypot(e.clientX - touchDownX, e.clientY - touchDownY);
+            const quickTap = moved < CFG.tapMaxMove && nowS() - touchDownT < CFG.tapMaxTime;
+            if (touchMode === "aim" && !isInAir()) {
+                clickPending = true; clickTouch = true;   // 放開 = 提竿
+            } else if (touchMode === "steer" && quickTap) {
+                clickPending = true; clickTouch = true;   // 空中快速點一下 = 再彈一次
+            }
+        }
+        touchMode = null;
+    };
+    window.addEventListener("pointerup", touchEnd, { passive: true });
+    window.addEventListener("pointercancel", touchEnd, { passive: true });
+    document.addEventListener("mouseout", function (e) {
+        if (!e.relatedTarget) mouseInside = false; // 滑鼠離開視窗
+    });
+
+    function pointerActive(t) {
+        return lastPointer === "mouse" ? mouseInside : (touchDown || t < touchUntil);
+    }
+
+    // ===== 魚鉤與釣線狀態 =====
+    let tipX = boatCX + CFG.rodTip.x, tipY = boatCY + CFG.rodTip.y;
+    let hx = tipX + 6, hy = tipY + 70, hvx = 0, hvy = 0;   // 魚鉤位置與速度（頁面座標）
+    let rope = 70;                                          // 目前放出的線長
+    let yankT = 0;                                          // 空鉤彈起剩餘時間
+    let hookAng = 0;                                        // 魚鉤目前的旋轉角 (rad)
+    // 彎鉤（色球掛的位置）在魚鉤本地座標約 (-3.5, 8)，要跟著魚鉤一起旋轉，
+    // 否則線往上甩、魚鉤翻過來時，色球會跟鉤子分開
+    const BEND_X = -3.5, BEND_Y = 8;
+    const bendDX = () => Math.cos(hookAng) * BEND_X - Math.sin(hookAng) * BEND_Y;
+    const bendDY = () => Math.sin(hookAng) * BEND_X + Math.cos(hookAng) * BEND_Y;
+    let waterTilt = 0;                                      // 瓶中水面傾斜
+    let waterRipple = 0;                                    // 瓶中水面波動強度（色球落入時變大）
+    let airYanks = 0;
+    let flyRose = false;                                    // 這次甩竿色球是否已經升到甲板以上                                       // 這次出水已經彈了幾次
+    let recoverT = 0;                                       // 慢慢回到游標的剩餘時間
+
+    // 釣線 = 一串質點（Verlet 繩索）。第 0 點釘在竿尖，最後一點釘在魚鉤。
+    // 每點只記「現在位置」和「上一幀位置」，速度 = 兩者相減，不用另存。
+    const RN = CFG.ropeSegments;
+    const rx = new Float32Array(RN + 1), ry = new Float32Array(RN + 1);
+    const rpx = new Float32Array(RN + 1), rpy = new Float32Array(RN + 1);
+    for (let i = 0; i <= RN; i++) {
+        const p = i / RN;
+        rx[i] = rpx[i] = tipX + (hx - tipX) * p;
+        ry[i] = rpy[i] = tipY + (hy - tipY) * p;
+    }
+
+    let state = "idle";  // idle | fly | land | cooldown
+    let st = 0;          // 進入目前狀態後經過的時間
+    let caught = null;
+    const setState = (s) => { state = s; st = 0; };
+
+    // ===== 色球動作 =====
+    function swim(f, t, dt) {
+        let turn = 0.9 * Math.sin(t * f.f1 + f.p1) + 0.55 * Math.sin(t * f.f2 + f.p2);
+        turn -= 0.45 * Math.sin(2 * f.h);           // 偏好水平游（h=0 或 π 是穩定點）
+
+        // 靠近邊界就轉向內側
+        const m = 60;
+        let wx = 0, wy = 0;
+        if (f.x < B.l + m) wx = 1; else if (f.x > B.r - m) wx = -1;
+        if (f.y < B.t + m * 0.5) wy = 1; else if (f.y > B.b - m * 0.5) wy = -1;
+        if (wx || wy) turn += angleDiff(Math.atan2(wy, wx), f.h) * 2.2;
+        f.h += turn * dt;
+
+        // 擺尾：sin^4 讓速度一陣一陣的，像魚在「划一下、滑一段」
+        const s = Math.max(0, Math.sin(t * f.fb + f.pb));
+        f.kick = s * s * s * s;
+        let speed = CFG.fishSpeed * (0.45 + 1.5 * f.kick);
+        if (f.flee > 0) { f.flee -= dt; speed += 120 * f.flee; f.kick = Math.max(f.kick, f.flee); }
+        f.x = clamp(f.x + Math.cos(f.h) * speed * dt, B.l, B.r);
+        f.y = clamp(f.y + Math.sin(f.h) * speed * dt, B.t, B.b);
+    }
+
+    function startArc(f, toX, toY, T, H) {
+        f.ax = f.x; f.ay = f.y; f.bx = toX; f.by = toY; f.at = 0; f.aT = T; f.aH = H;
+    }
+    function stepArc(f, dt) {
+        f.at += dt;
+        const p = Math.min(1, f.at / f.aT);
+        f.x = f.ax + (f.bx - f.ax) * p;
+        f.y = f.ay + (f.by - f.ay) * p - arc(p, f.aH);
+        return p >= 1;
+    }
+
+    function tossBack(f) {
+        // 船上原本的顏色丟回水裡：往空間比較大的那一側拋
+        const side = boatCX < vw / 2 ? 1 : -1;
+        const dir = Math.random() < 0.7 ? side : -side;
+        const tx = clamp(f.x + dir * rand(120, 260), B.l + 20, B.r - 20);
+        const ty = clamp(B.t + rand(40, 120), B.t, B.b);
+        f.mode = "toss";
+        f.splashEnd = true;
+        f.el.classList.remove("active");
+        startArc(f, tx, ty, 0.8, 70);
+        f.h = dir > 0 ? 0 : Math.PI;
+    }
+
+    function dropBack(f) {
+        // 沒掉進船：色球掉回水裡、沉下去後游走
+        f.mode = "toss";
+        f.splashEnd = false;
+        startArc(f, clamp(f.x, B.l, B.r), clamp(B.t + rand(20, 60), B.t, B.b), 0.45, 0);
+        f.h = rand(0, TAU);
+    }
+
+    // 提竿時鉤子底下（或手機點的位置）有沒有色球
+    function fishAt(x, y, r) {
+        let best = null, bd = r;
+        for (let i = 0; i < fish.length; i++) {
+            const f = fish[i];
+            if (f.mode !== "swim") continue;
+            const d = Math.hypot(x - swayX - f.x, y - swayY - f.y);
+            if (d < bd) { bd = d; best = f; }
+        }
+        return best;
+    }
+
+    function drawFish(f, rot, sx, sy) {
+        f.el.style.transform =
+            "translate3d(" + (f.x - originX - fishR).toFixed(1) + "px," +
+            (f.y - originY - fishR).toFixed(1) + "px,0) rotate(" +
+            rot.toFixed(3) + "rad) scale(" + sx.toFixed(3) + "," + sy.toFixed(3) + ")";
+    }
+
+    // ===== 主迴圈 =====
+    let last = performance.now();
+    const phX = rand(0, TAU), phY = rand(0, TAU);
+
+    function frame(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        const t = now / 1000;
+        st += dt;
+
+        // --- 船晃動（原本 boatanimation.js 的公式，改用時間計算） ---
+        swayX = CFG.swayAmpX * Math.sin(t * CFG.swayOmega + phX);
+        swayY = CFG.swayAmpY * Math.cos(t * CFG.swayOmega + phY);
+        const swayT = "translate3d(" + swayX.toFixed(2) + "px," + swayY.toFixed(2) + "px,0)";
+        for (let i = 0; i < swayEls.length; i++) swayEls[i].style.transform = swayT;
+
+        tipX = boatCX + CFG.rodTip.x + swayX;
+        tipY = boatCY + CFG.rodTip.y + swayY;
+        const holdX = boatCX + CFG.holdSpot.x, holdY = boatCY + CFG.holdSpot.y; // 基準座標
+        const deckY = holdY + swayY;                                             // 頁面座標
+        const waterTop = tipY + 18;
+        const active = pointerActive(t);
+
+        // --- 提竿 ---
+        // 鉤子回到水裡就重新計算彈跳次數
+        if ((state === "idle" || state === "cooldown") && yankT <= 0 && hy > waterTop) airYanks = 0;
+
+        if (clickPending) {
+            clickPending = false;
+            if (state === "fly") {
+                // 色球在空中：再點一下往上再彈一次（設定速度、不疊加，才不會越彈越高）
+                if (airYanks < CFG.maxYanks) {
+                    airYanks++;
+                    hvy = Math.min(hvy, -Math.sqrt(2 * CFG.flyGravity * CFG.flyReboost));
+                }
+            } else if ((state === "idle" || state === "cooldown") && airYanks > 0) {
+                // 空鉤還在空中：再彈一次
+                if (airYanks < CFG.maxYanks) {
+                    airYanks++;
+                    hvy = Math.min(hvy, -CFG.reYankImpulse);
+                    yankT = 0.4;
+                    recoverT = 0;
+                }
+            } else if (state === "idle" || state === "cooldown") {
+                // 鉤子的彎鉤在綁線點下方約 7px
+                const f = fishAt(hx + bendDX(), hy + bendDY(), clickTouch ? CFG.touchCatchRadius : CFG.catchRadius);
+                if (f) {
+                    // 鉤到了：初速 v = √(2gh)，剛好甩到竿尖上方 flyApex 的高度
+                    const h = Math.max(120, hy - (tipY - CFG.flyApex));
+                    hvy = -Math.sqrt(2 * CFG.flyGravity * h);
+                    hvx *= 0.3;
+                    yankT = 0;
+                    recoverT = 0;
+                    airYanks = 1;
+                    caught = f;
+                    flyRose = false;
+                    touchSteerX = hx;       // 手機：空中從目前位置開始滑動操控
+                    buzz(15);               // 手機震動：鉤到了
+                    f.mode = "hooked";
+                    splash(hx + bendDX(), hy + bendDY());
+                    setState("fly");
+                } else {
+                    // 空鉤：照樣往上（略往竿尖）彈，附近的魚被嚇跑
+                    hvy = Math.min(hvy, 0) - CFG.yankImpulse;
+                    hvx += (tipX - hx) * 0.6;
+                    yankT = 0.5; // 約等於彈到最高點的時間
+                    recoverT = 0;
+                    airYanks = 1;
+                    for (let i = 0; i < fish.length; i++) {
+                        const g = fish[i];
+                        if (g.mode !== "swim") continue;
+                        const ddx = g.x - (hx - swayX), ddy = g.y - (hy - swayY);
+                        if (ddx * ddx + ddy * ddy < 80 * 80) { g.h = Math.atan2(ddy, ddx); g.flee = 0.5; }
+                    }
+                }
+            }
+        }
+
+        // --- 魚鉤 ---
+        if (state === "fly") {
+            // 垂直：拋體運動；水平：玩家控制（臨界阻尼彈簧追游標 x）
+            const steerX = lastPointer === "mouse"
+                ? (active ? clamp(px, 8, vw - 8) : hx)
+                : touchSteerX;              // 手機：照滑動量移動，手指不必跟著色球
+            const w = CFG.steerOmega;
+            hvx += (w * w * (steerX - hx) - 2 * 0.9 * w * hvx) * dt;
+            hvy += CFG.flyGravity * dt;
+            hx += hvx * dt;
+            hy += hvy * dt;
+            if (hy < CFG.topMargin) { hy = CFG.topMargin; hvy = Math.max(hvy, 0); } // 天花板
+            const fishY = hy + bendDY();
+            const fishX = hx + bendDX();
+            if (fishY < deckY) flyRose = true; // 這一甩已經升到甲板以上
+
+            // 升過甲板、正在往下掉、而且已經到甲板高度：判斷有沒有落在船上。
+            // （不能只抓「剛好穿過」的那一幀：彎鉤位置會隨鉤子旋轉跳動，
+            //   可能直接跳過那一幀，色球就會一直往下掉。）
+            // 保險：萬一掉出畫面還沒判定，也當作沒釣到。
+            if ((flyRose && hvy > 0 && fishY >= deckY) || fishY > vh + 40) {
+                const boatX = boatCX + CFG.boatCatch.x + swayX;
+                caught.x = fishX - swayX; caught.y = fishY - swayY;
+                const half = CFG.boatCatch.halfWidth + (lastPointer === "mouse" ? 0 : CFG.touchBoatBonus);
+                if (flyRose && Math.abs(fishX - boatX) < half) {
+                    // 成功：輕輕彈一下落到船上的位置
+                    // 先拋到瓶口上方再落進瓶子
+                    startArc(caught, holdX, holdY, 0.4, 34);
+                    setState("land");
+                } else {
+                    // 失敗：掉回水裡
+                    splash(fishX, fishY);
+                    dropBack(caught);
+                    caught = null;
+                    hvy *= 0.3; // 入水減速
+                    recoverT = CFG.recoverTime;
+                    setState("cooldown");
+                }
+            }
+        } else if (state === "land") {
+            // 魚鉤跟著色球落進船
+            const done = stepArc(caught, dt);
+            hx = caught.x + swayX - bendDX(); hy = caught.y + swayY - bendDY();
+            hvx = 0; hvy = 0;
+            if (done) {
+                const prev = held;
+                held = caught;
+                held.mode = "held";
+                caught = null;
+                held.el.click();     // 觸發原本的換色流程（背景、文字、船燈）
+                // 顏色資訊淡入：第一次釣到時從隱藏變成顯示，之後每次換色也重新淡入
+                document.body.classList.remove("awaiting-catch", "color-info-reveal");
+                void document.body.offsetWidth; // 讓淡入動畫重新開始
+                document.body.classList.add("color-info-reveal");
+                setLineColor(window.getComputedStyle(held.el).backgroundColor);
+                if (prev && prev !== held) tossBack(prev);
+                waterRipple = 1;     // 落進瓶子：水面晃一下
+                buzz([20, 40, 20]);  // 手機震動：落進船裡
+                recoverT = CFG.recoverTime;
+                setState("cooldown");
+            }
+        } else if (yankT > 0) {
+            // 空鉤彈起中：暫時不受游標牽引，只有阻力和重力，鉤子才彈得高
+            yankT -= dt;
+            const k = Math.exp(-3 * dt);
+            hvx *= k;
+            hvy = hvy * k + 1100 * dt;
+            hx += hvx * dt;
+            hy += hvy * dt;
+            if (hy < CFG.topMargin) { hy = CFG.topMargin; hvy = Math.max(hvy, 0); } // 天花板
+            if (yankT <= 0) recoverT = CFG.recoverTime; // 彈到頂，接著慢慢回去
+        } else {
+            let tx, ty;
+            if (active) {
+                tx = clamp(px, 8, vw - 8);
+                // 手機：鉤子停在手指上方，手指才不會擋住
+                ty = clamp(py - (lastPointer === "mouse" ? 0 : CFG.touchHookLift), waterTop, vh - 12);
+            } else {
+                // 沒人操作：鉤子垂在竿下輕輕晃
+                tx = tipX + 6;
+                ty = tipY + 70 + 3 * Math.sin(t * 1.3);
+            }
+            // 阻尼彈簧：a = ω²(目標−位置) − 2ζω·速度
+            let w = CFG.hookOmega, z = CFG.hookZeta;
+            if (recoverT > 0) {
+                // 彈完的回程：先用很軟、不會過衝的彈簧（ζ=1），
+                // 再隨時間（p² 緩入）慢慢變回平常的跟手程度
+                recoverT -= dt;
+                const p = 1 - Math.max(0, recoverT) / CFG.recoverTime;
+                w = CFG.recoverOmega + (CFG.hookOmega - CFG.recoverOmega) * p * p;
+                z = 1;
+                // 剛開始時也把上一段殘留的速度慢慢吃掉，免得被甩回去
+                const k = Math.exp(-2 * dt);
+                hvx *= k; hvy *= k;
+            }
+            hvx += (w * w * (tx - hx) - 2 * z * w * hvx) * dt;
+            hvy += (w * w * (ty - hy) - 2 * z * w * hvy) * dt;
+            hx += hvx * dt;
+            hy += hvy * dt;
+        }
+
+        if (state === "cooldown" && st > 0.4) setState("idle");
+
+        // 保險：鉤子永遠留在畫面附近，釣線（虛線點點）才不會無限變長拖慢效能
+        if (hx < -60 || hx > vw + 60) { hx = clamp(hx, -60, vw + 60); hvx = 0; }
+        if (hy > vh + 60) { hy = vh + 60; hvy = Math.min(hvy, 0); }
+
+        // --- 瓶中的水 ---
+        // 水面往船晃動速度的反方向傾斜（慣性），再慢慢跟上；平時有細小波紋，色球落入時波紋變大後平息
+        const boatVX = CFG.swayAmpX * CFG.swayOmega * Math.cos(t * CFG.swayOmega + phX);
+        waterTilt += (-boatVX * 0.012 - waterTilt) * (1 - Math.exp(-3 * dt));
+        waterRipple *= Math.exp(-1.6 * dt);
+        {
+            const L = CFG.bottle.waterLevel;
+            const amp = 0.35 + waterRipple * 2.2;
+            const spd = 2.2 + waterRipple * 4;
+            let surf = "";
+            for (let x = 0; x <= BOTTLE_W + 0.01; x += BOTTLE_W / 15) {
+                const y = L + waterTilt * (x - BOTTLE_CX) + amp * Math.sin(x * 0.55 + t * spd);
+                surf += (surf ? " L" : "M") + x.toFixed(2) + "," + y.toFixed(2);
+            }
+            waterLine.setAttribute("d", surf);
+            waterBody.setAttribute("d", surf + " L" + BOTTLE_W + "," + BOTTLE_H + " L0," + BOTTLE_H + " Z");
+        }
+
+        // --- 色球 ---
+        for (let i = 0; i < fish.length; i++) {
+            const f = fish[i];
+            let rot = f.h, sx = 1, sy = 1;
+            switch (f.mode) {
+                case "swim":
+                    swim(f, t, dt);
+                    rot = f.h; sx = 1 + 0.18 * f.kick; sy = 1 - 0.12 * f.kick;
+                    break;
+                case "hooked":
+                    // 飛行中的位置等這一幀魚鉤角度算好後再放（見下方「魚鉤」之後）
+                    if (state === "fly") continue;
+                    rot = -Math.PI / 2 + 0.5 * Math.sin(t * 26); // 掛在鉤上掙扎
+                    sx = 1.15; sy = 0.9;
+                    break;
+                case "held":
+                    // 在瓶子的水裡輕輕漂浮
+                    f.x = holdX + 1.2 * Math.sin(t * 0.8 + 1) + waterTilt * 6;
+                    f.y = holdY - 2 + 1.4 * Math.sin(t * 1.6);
+                    rot = 0;
+                    break;
+                case "toss":
+                    if (stepArc(f, dt)) {
+                        f.mode = "swim";
+                        f.flee = 0.5;
+                        if (f.splashEnd) splash(f.x + swayX, f.y + swayY);
+                    }
+                    rot = f.at * 9;
+                    break;
+            }
+            drawFish(f, rot, sx, sy);
+        }
+
+        // --- 釣線：Verlet 繩索 ---
+        const d = Math.hypot(hx - tipX, hy - tipY);
+        // 平常保留一點點鬆弛，線才不會像尺一樣直
+        const wantL = d * 1.04 + 10;
+        if (state === "fly" || state === "land") {
+            rope = d * 1.01 + 2; // 甩竿時線是繃緊的
+        } else if (wantL > rope) {
+            rope = wantL;        // 鉤子被拉遠就立刻放線
+        } else {
+            rope += (wantL - rope) * (1 - Math.exp(-0.7 * dt)); // 靠近時慢慢收線，多出來的就是鬆弛
+        }
+        const seg = rope / RN;
+
+        // 1) 慣性 + 水阻力 + 重力：x新 = x + (x − x舊)·阻力 + g·dt²
+        const drag = Math.exp(-CFG.ropeDrag * dt);
+        const g = CFG.ropeGravity * dt * dt;
+        for (let i = 1; i < RN; i++) {
+            const vx = (rx[i] - rpx[i]) * drag, vy = (ry[i] - rpy[i]) * drag;
+            rpx[i] = rx[i]; rpy[i] = ry[i];
+            rx[i] += vx; ry[i] += vy + g;
+        }
+        rx[0] = tipX; ry[0] = tipY;   // 兩端釘住
+        rx[RN] = hx; ry[RN] = hy;
+
+        // 2) 繩長約束：相鄰兩點距離「超過」一節才拉回（可以變短 = 鬆弛）
+        for (let k = 0; k < CFG.ropeIterations; k++) {
+            for (let i = 0; i < RN; i++) {
+                const ex = rx[i + 1] - rx[i], ey = ry[i + 1] - ry[i];
+                const dist = Math.sqrt(ex * ex + ey * ey);
+                if (dist <= seg || dist === 0) continue;
+                const wa = i === 0 ? 0 : 1, wb = i + 1 === RN ? 0 : 1; // 釘住的端點不動
+                if (wa + wb === 0) continue;
+                const corr = (dist - seg) / dist / (wa + wb);
+                rx[i] += ex * corr * wa; ry[i] += ey * corr * wa;
+                rx[i + 1] -= ex * corr * wb; ry[i + 1] -= ey * corr * wb;
+            }
+        }
+
+        // 3) 畫成平滑曲線：以每個質點當控制點、相鄰中點當端點串二次貝茲
+        let dStr = "M" + rx[0].toFixed(1) + "," + ry[0].toFixed(1);
+        for (let i = 1; i < RN; i++) {
+            dStr += " Q" + rx[i].toFixed(1) + "," + ry[i].toFixed(1) + " " +
+                ((rx[i] + rx[i + 1]) / 2).toFixed(1) + "," + ((ry[i] + ry[i + 1]) / 2).toFixed(1);
+        }
+        dStr += " L" + hx.toFixed(1) + "," + hy.toFixed(1);
+        linePath.setAttribute("d", dStr);
+        // 魚鉤沿著最後一節線的方向
+        // 平滑轉向：線方向急轉時（例如甩過竿尖上方）鉤子不會瞬間翻面
+        const targetAng = Math.atan2(hy - ry[RN - 1], hx - rx[RN - 1]) - Math.PI / 2;
+        hookAng += angleDiff(targetAng, hookAng) * (1 - Math.exp(-18 * dt));
+        hookAng = Math.atan2(Math.sin(hookAng), Math.cos(hookAng)); // 保持在 ±π，不讓角度一直累加
+        const hookAngle = hookAng * 180 / Math.PI;
+        hookPath.setAttribute("transform",
+            "translate(" + hx.toFixed(1) + "," + hy.toFixed(1) + ") rotate(" + hookAngle.toFixed(1) + ")");
+        // 飛行中的色球：用這一幀的魚鉤角度掛在彎鉤上（可以蓋住鉤子）
+        if (caught && state === "fly") {
+            caught.x = hx + bendDX() - swayX;
+            caught.y = hy + bendDY() - swayY;
+            drawFish(caught, -Math.PI / 2 + 0.5 * Math.sin(t * 26), 1.15, 0.9);
+        }
+
+        // --- 水花 ---
+        for (let i = 0; i < splashes.length; i++) {
+            const s = splashes[i];
+            if (s.t < 0) continue;
+            s.t += dt;
+            const p = s.t / 0.6;
+            if (p >= 1) { s.t = -1; s.el.setAttribute("r", "0"); continue; }
+            s.el.setAttribute("cx", s.x.toFixed(1));
+            s.el.setAttribute("cy", s.y.toFixed(1));
+            s.el.setAttribute("r", (3 + 16 * p).toFixed(1));
+            s.el.style.opacity = (0.7 * (1 - p)).toFixed(2);
+        }
+
+        requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+});
