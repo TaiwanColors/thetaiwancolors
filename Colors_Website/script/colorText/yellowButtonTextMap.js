@@ -159,21 +159,7 @@ const yellowButtonTextMap = {
         hexText:"#D9B55A",
     },
 
-    // 台灣金：取文化部「台灣金」意象，色值自訂
     13: {
-        colorName: "台灣金",
-        enColorName: "Taiwan Gold",
-        cIntText: "0",
-        mIntText: "19",
-        yIntText: "63",
-        kIntText: "22",
-        rIntText: "200",
-        gIntText: "162",
-        bIntText: "74",
-        hexText:"#C8A24A",
-    },
-
-    14: {
         colorName: "芒果",
         enColorName: "Mango",
         cIntText: "0",
@@ -186,7 +172,7 @@ const yellowButtonTextMap = {
         hexText:"#F6B13A",
     },
 
-    15: {
+    14: {
         colorName: "竹筍",
         enColorName: "Bamboo Shoot",
         cIntText: "0",
@@ -199,7 +185,7 @@ const yellowButtonTextMap = {
         hexText:"#E4D9A6",
     },
 
-    16: {
+    15: {
         colorName: "黃槿",
         enColorName: "Sea Hibiscus",
         cIntText: "0",
@@ -212,7 +198,7 @@ const yellowButtonTextMap = {
         hexText:"#F0CF5A",
     },
 
-    17: {
+    16: {
         colorName: "烏龍茶湯",
         enColorName: "Oolong Tea",
         cIntText: "0",
