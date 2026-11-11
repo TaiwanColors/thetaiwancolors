@@ -1206,3 +1206,145 @@ body.color-info-reveal .Hex-int-text {
 
 
 /* 亂數在容器內*/
+
+
+/* ===== 載入畫面（script/loading.js） =====
+   沿用網站的風格：純色背景、白色 COLORS、點點虛線的釣線與魚鉤、在水面上漂浮的色球 */
+#loading {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: #3a3550;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    transition: opacity 0.9s ease, visibility 0.9s;
+}
+
+#loading.loading-done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-logo {
+    width: 150px;
+    opacity: 0.95;
+    user-select: none;
+}
+
+.loading-scene {
+    position: relative;
+    width: 160px;
+    height: 74px;
+}
+
+/* 釣線：跟網站上的釣線一樣，一顆顆小圓點 */
+.loading-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 2px;
+    height: 34px;
+    margin-left: -1px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0.9px, transparent 1.2px) 0 0 / 2px 6px repeat-y;
+    transform-origin: top center;
+    animation: loading-line 2.4s ease-in-out infinite;
+}
+
+.loading-hook {
+    position: absolute;
+    left: 50%;
+    top: 32px;
+    width: 11px;
+    height: 13px;
+    margin-left: -2px;
+    overflow: visible;
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.75);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    transform-origin: 1px 0;
+    animation: loading-hook 2.4s ease-in-out infinite;
+}
+
+/* 水面：週期 40px 的波浪，畫 200px 寬（多一個週期），往左平移一個週期後無縫循環 */
+.loading-wave-box {
+    position: absolute;
+    left: 0;
+    bottom: 6px;
+    width: 160px;
+    height: 12px;
+    overflow: hidden;
+}
+
+.loading-wave {
+    display: block;
+    width: 200px;
+    height: 12px;
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.25);
+    stroke-width: 1;
+    animation: loading-wave 2s linear infinite;
+}
+
+@keyframes loading-wave {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-40px, 0, 0); }
+}
+
+/* 色球：在水面上一顆接一顆輕輕浮起 */
+.loading-dot {
+    position: absolute;
+    bottom: 9px;
+    left: var(--x);
+    width: 9px;
+    height: 9px;
+    margin-left: -4.5px; /* --x 是色球中心 */
+    border-radius: 50%;
+    background: var(--c);
+    animation: loading-dot 1.6s ease-in-out var(--d) infinite;
+}
+
+.loading-text {
+    margin: 0;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.45em;
+    padding-left: 0.45em; /* 字距會在最後一個字後面多一段空白，左邊補同樣寬，整行才置中 */
+    color: rgba(255, 255, 255, 0.55);
+    animation: loading-text 2.4s ease-in-out infinite;
+}
+
+@keyframes loading-line {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(1.12); }
+}
+
+@keyframes loading-hook {
+    0%, 100% { transform: translateY(0) rotate(-6deg); }
+    50%      { transform: translateY(4px) rotate(6deg); }
+}
+
+@keyframes loading-dot {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-7px); }
+}
+
+@keyframes loading-text {
+    0%, 100% { opacity: 0.45; }
+    50%      { opacity: 0.85; }
+}
+
+
+/* ===== 防止拖曳到圖片（船、標誌、瓶子…） =====
+   釣魚時常常按住滑鼠移動，瀏覽器會把圖片當成要拖走的東西；圖片一律不能拖、不能被選取 */
+img, svg, object, canvas {
+    -webkit-user-drag: none;
+    user-drag: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+

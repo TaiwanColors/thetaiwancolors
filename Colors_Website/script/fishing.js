@@ -12,7 +12,8 @@
  *   3. 色球在空中受重力往下掉，玩家左右移動（手機：按住拖曳）控制落點；
  *      在空中可以再點一下多彈一次。每次出水最多彈 2 次（含第一次），以免太高。
  *      彈完後鉤子會慢慢回到游標，不會一下子被拉回去。
- *   手機（像拉彈弓）：按住拖曳瞄準，鉤子停在手指上方 40px；放開 = 提竿。
+ *   手機：直接點一下色球 → 魚鉤自己游過去、碰到就鉤起來（點空的地方，鉤子就移到那裡）。
+ *      按住拖曳可以手動移動鉤子（鉤子在手指上方 40px）。
  *      色球在空中時，在螢幕任何地方左右滑動，色球照滑動量移動；快速點一下 = 再彈一次。
  *      手機上鉤到範圍與船的接住範圍放寬一點，鉤到、落船時會震動（Android）。
  *   4. 掉進船裡才算釣到 → 換成這個顏色，船上原本那顆被丟回水裡；
@@ -44,6 +45,9 @@ window.addEventListener("load", function () {
         touchCatchRadius: 26,         // 觸控時鉤到色球的範圍（手指比滑鼠不精準，放寬一點）
         touchBoatBonus: 16,           // 觸控時船的接住範圍再加寬幾 px
         touchSteerGain: 1.3,          // 空中左右滑動的靈敏度（手指滑 1px，色球移動幾 px）
+        tapFishRadius: 40,            // 手機點一下：離點的位置多近的色球會被當成目標 (px)
+        autoOmega: 14,                // 魚鉤自動游向目標色球的速度（彈簧頻率，越大越快）
+        autoTimeout: 2.5,             // 追不到就放棄的秒數
         tapMaxMove: 12,               // 移動不超過幾 px、
         tapMaxTime: 0.3,              //   而且在幾秒內放開，才算「點一下」
         yankImpulse: 1380,            // 空鉤提竿往上彈的初速 (px/s)，約彈高 255px
@@ -209,6 +213,59 @@ window.addEventListener("load", function () {
     measure();
     window.addEventListener("resize", measure);
 
+    // ===== 船的上緣（給雨、雪判斷「落到船上」用） =====
+    // 把船的圖（含船首、船燈、企鵝）和瓶子畫到一張看不見的小畫布上，
+    // 量出每一欄最上面有東西的位置；之後換船的圖也會自動跟著新的圖。
+    let boatTop = null;            // boatTop[x]：船容器內第 x px 那一欄的最上緣（沒有東西是 Infinity）
+    function buildBoatProfile() {
+        const imgs = Array.from(boatEl.querySelectorAll("img"));
+        const bw = boatEl.offsetWidth || 190, bh = boatEl.offsetHeight || 95;
+        const k = 2; // 兩倍解析度量，比較準
+        const cv = document.createElement("canvas");
+        cv.width = Math.round(bw * k); cv.height = Math.round(bh * k);
+        const g = cv.getContext("2d");
+        imgs.forEach(function (im) {
+            g.drawImage(im, 0, 0, (im.clientWidth || bw) * k, (im.clientHeight || bh) * k);
+        });
+        // 瓶子（瓶身在船上的位置）
+        const s = CFG.bottle.scale;
+        g.setTransform(k * s, 0, 0, k * s,
+            k * (CFG.holdSpot.x + bw / 2 - BOTTLE_CX * s),
+            k * (CFG.holdSpot.y + bh / 2 + CFG.bottle.bottomOffset - BOTTLE_BOTTOM * s));
+        g.fill(new Path2D(BOTTLE_PATH));
+        let data;
+        try { data = g.getImageData(0, 0, cv.width, cv.height).data; } catch (e) { return; } // 用 file:// 開啟時讀不到，就不做
+        const top = new Float32Array(Math.ceil(bw));
+        for (let x = 0; x < top.length; x++) {
+            const cx = Math.min(cv.width - 1, Math.round((x + 0.5) * k));
+            top[x] = Infinity;
+            // 至少連續 2px 厚才算表面：像釣竿這種細線，雨雪會直接穿過
+            let run = 0;
+            for (let y = 0; y < cv.height; y++) {
+                if (data[(y * cv.width + cx) * 4 + 3] > 128) {
+                    if (++run >= 2 * k) { top[x] = (y - run + 1) / k; break; }
+                } else run = 0;
+            }
+        }
+        boatTop = top;
+    }
+    // 船的圖是 load 之後才加進來的，等它們都載入完再量
+    (function waitBoatImages() {
+        const imgs = Array.from(boatEl.querySelectorAll("img"));
+        Promise.all(imgs.map(function (im) {
+            return im.complete ? Promise.resolve() : new Promise(function (r) { im.addEventListener("load", r, { once: true }); im.addEventListener("error", r, { once: true }); });
+        })).then(buildBoatProfile);
+    })();
+    // 頁面座標 x 這一欄，船的上緣在頁面上的 y（跟著船晃）；不在船上回傳 Infinity
+    window.boatSurfaceAt = function (xPage) {
+        if (!boatTop) return Infinity;
+        const bw = boatEl.offsetWidth || 190, bh = boatEl.offsetHeight || 95;
+        const lx = Math.floor(xPage - (boatCX - bw / 2 + swayX));
+        if (lx < 0 || lx >= boatTop.length) return Infinity;
+        return boatTop[lx] + boatCY - bh / 2 + swayY;
+    };
+    window.boatSway = { x: 0, y: 0 }; // 船目前晃動的位移（落在船上融化的雪會跟著船動）
+
     // ===== 色球（魚）資料 =====
     // 轉向用「多個正弦相加」當作平滑雜訊：每顆魚頻率、相位不同，
     // 是封閉公式，不需要每幀擲亂數，也不會抖動。
@@ -274,6 +331,7 @@ window.addEventListener("load", function () {
     let touchMode = null;          // "aim" 瞄準 | "steer" 空中操控
     let lastTouchX = 0, touchDownX = 0, touchDownY = 0, touchDownT = 0;
     let touchSteerX = 0;           // 空中時色球要去的 x（由滑動量累加）
+    let autoTarget = null, autoT = 0; // 手機點到的色球：魚鉤會自己游過去鉤它
     const isInAir = () => state === "fly" || state === "land" ||
         ((state === "idle" || state === "cooldown") && airYanks > 0);
 
@@ -307,6 +365,7 @@ window.addEventListener("load", function () {
             touchMode = "steer";
         } else {
             touchMode = "aim";
+            autoTarget = null;      // 重新按下就取消上一個自動目標
             px = e.clientX; py = e.clientY;
         }
     }, { passive: true });
@@ -317,8 +376,10 @@ window.addEventListener("load", function () {
         if (e.type === "pointerup") {
             const moved = Math.hypot(e.clientX - touchDownX, e.clientY - touchDownY);
             const quickTap = moved < CFG.tapMaxMove && nowS() - touchDownT < CFG.tapMaxTime;
-            if (touchMode === "aim" && !isInAir()) {
-                clickPending = true; clickTouch = true;   // 放開 = 提竿
+            if (touchMode === "aim" && !isInAir() && quickTap) {
+                // 點一下色球：魚鉤自己游過去鉤；點空的地方：鉤子移到那裡
+                autoTarget = fishAt(e.clientX, e.clientY, CFG.tapFishRadius);
+                autoT = 0;
             } else if (touchMode === "steer" && quickTap) {
                 clickPending = true; clickTouch = true;   // 空中快速點一下 = 再彈一次
             }
@@ -326,6 +387,17 @@ window.addEventListener("load", function () {
         touchMode = null;
     };
     window.addEventListener("pointerup", touchEnd, { passive: true });
+
+    // 電腦操作：按住滑鼠移動時，瀏覽器會把船（圖片）當成要拖走的圖，出現半透明的拖曳圖示；
+    // 連點空白處也會反白選到文字。釣魚時都不需要，直接擋掉。
+    // （顏色名稱、CMYK、色碼這些文字仍然可以選取複製；連結、按鈕照常可以點）
+    document.addEventListener("dragstart", function (e) { e.preventDefault(); });
+    const SELECTABLE = "p, t, a, input, textarea, " + UI_SELECTOR;
+    document.addEventListener("mousedown", function (e) {
+        if (e.button !== 0) return;
+        if (e.target && e.target.closest && e.target.closest(SELECTABLE)) return;
+        e.preventDefault(); // 不開始拖曳、不反白選字
+    });
     window.addEventListener("pointercancel", touchEnd, { passive: true });
     document.addEventListener("mouseout", function (e) {
         if (!e.relatedTarget) mouseInside = false; // 滑鼠離開視窗
@@ -454,6 +526,7 @@ window.addEventListener("load", function () {
         // --- 船晃動（原本 boatanimation.js 的公式，改用時間計算） ---
         swayX = CFG.swayAmpX * Math.sin(t * CFG.swayOmega + phX);
         swayY = CFG.swayAmpY * Math.cos(t * CFG.swayOmega + phY);
+        window.boatSway.x = swayX; window.boatSway.y = swayY;
         const swayT = "translate3d(" + swayX.toFixed(2) + "px," + swayY.toFixed(2) + "px,0)";
         for (let i = 0; i < swayEls.length; i++) swayEls[i].style.transform = swayT;
 
@@ -592,10 +665,15 @@ window.addEventListener("load", function () {
             if (yankT <= 0) recoverT = CFG.recoverTime; // 彈到頂，接著慢慢回去
         } else {
             let tx, ty;
-            if (active) {
+            if (autoTarget && autoTarget.mode !== "swim") autoTarget = null; // 目標被別人拿走了
+            if (autoTarget) {
+                // 手機：魚鉤自己游向點到的色球（色球在游，就一路跟著）
+                tx = autoTarget.x + swayX - bendDX();
+                ty = autoTarget.y + swayY - bendDY();
+            } else if (active) {
                 tx = clamp(px, 8, vw - 8);
-                // 手機：鉤子停在手指上方，手指才不會擋住
-                ty = clamp(py - (lastPointer === "mouse" ? 0 : CFG.touchHookLift), waterTop, vh - 12);
+                // 手機拖曳時：鉤子停在手指上方，手指才不會擋住
+                ty = clamp(py - (lastPointer !== "mouse" && touchDown ? CFG.touchHookLift : 0), waterTop, vh - 12);
             } else {
                 // 沒人操作：鉤子垂在竿下輕輕晃
                 tx = tipX + 6;
@@ -603,7 +681,20 @@ window.addEventListener("load", function () {
             }
             // 阻尼彈簧：a = ω²(目標−位置) − 2ζω·速度
             let w = CFG.hookOmega, z = CFG.hookZeta;
-            if (recoverT > 0) {
+            if (autoTarget) {
+                w = CFG.autoOmega; z = 0.9; recoverT = 0;   // 快、不晃，直直游過去
+                autoT += dt;
+                const d = Math.hypot(hx + bendDX() - (autoTarget.x + swayX), hy + bendDY() - (autoTarget.y + swayY));
+                if (d < CFG.touchCatchRadius) {
+                    // 追到手機鉤到範圍內 → 鉤子貼上色球、提竿鉤起來
+                    // （色球在游，追的鉤子總會落後一點，等到完全重疊可能永遠等不到）
+                    hx = autoTarget.x + swayX - bendDX();
+                    hy = autoTarget.y + swayY - bendDY();
+                    autoTarget = null; clickPending = true; clickTouch = true;
+                } else if (autoT > CFG.autoTimeout) {
+                    autoTarget = null;                                          // 追不到就算了
+                }
+            } else if (recoverT > 0) {
                 // 彈完的回程：先用很軟、不會過衝的彈簧（ζ=1），
                 // 再隨時間（p² 緩入）慢慢變回平常的跟手程度
                 recoverT -= dt;

@@ -89,4 +89,140 @@ const yellowButtonTextMap = {
         bIntText: "93",
         hexText:"#D27E5D",
     },
+
+    // ===== 額外加入：台灣特色色（2026-11-11 新增）=====
+    // 依台灣的自然、地景、物產與日常命名；CMYK 為 RGB 直接換算的近似值。
+    // 有出處的顏色另外標註來源，其餘色值為自訂。
+
+    8: {
+        colorName: "鳳梨酥",
+        enColorName: "Pineapple Cake",
+        cIntText: "0",
+        mIntText: "21",
+        yIntText: "66",
+        kIntText: "9",
+        rIntText: "232",
+        gIntText: "183",
+        bIntText: "78",
+        hexText:"#E8B74E",
+    },
+
+    9: {
+        colorName: "愛玉",
+        enColorName: "Aiyu Jelly",
+        cIntText: "0",
+        mIntText: "6",
+        yIntText: "40",
+        kIntText: "8",
+        rIntText: "234",
+        gIntText: "219",
+        bIntText: "140",
+        hexText:"#EADB8C",
+    },
+
+    10: {
+        colorName: "金瓜石",
+        enColorName: "Jinguashi Gold",
+        cIntText: "0",
+        mIntText: "20",
+        yIntText: "63",
+        kIntText: "21",
+        rIntText: "201",
+        gIntText: "161",
+        bIntText: "74",
+        hexText:"#C9A14A",
+    },
+
+    11: {
+        colorName: "阿勃勒",
+        enColorName: "Golden Shower",
+        cIntText: "0",
+        mIntText: "19",
+        yIntText: "86",
+        kIntText: "5",
+        rIntText: "243",
+        gIntText: "198",
+        bIntText: "35",
+        hexText:"#F3C623",
+    },
+
+    12: {
+        colorName: "稻浪",
+        enColorName: "Rice Waves",
+        cIntText: "0",
+        mIntText: "17",
+        yIntText: "59",
+        kIntText: "15",
+        rIntText: "217",
+        gIntText: "181",
+        bIntText: "90",
+        hexText:"#D9B55A",
+    },
+
+    // 台灣金：取文化部「台灣金」意象，色值自訂
+    13: {
+        colorName: "台灣金",
+        enColorName: "Taiwan Gold",
+        cIntText: "0",
+        mIntText: "19",
+        yIntText: "63",
+        kIntText: "22",
+        rIntText: "200",
+        gIntText: "162",
+        bIntText: "74",
+        hexText:"#C8A24A",
+    },
+
+    14: {
+        colorName: "芒果",
+        enColorName: "Mango",
+        cIntText: "0",
+        mIntText: "28",
+        yIntText: "76",
+        kIntText: "4",
+        rIntText: "246",
+        gIntText: "177",
+        bIntText: "58",
+        hexText:"#F6B13A",
+    },
+
+    15: {
+        colorName: "竹筍",
+        enColorName: "Bamboo Shoot",
+        cIntText: "0",
+        mIntText: "5",
+        yIntText: "27",
+        kIntText: "11",
+        rIntText: "228",
+        gIntText: "217",
+        bIntText: "166",
+        hexText:"#E4D9A6",
+    },
+
+    16: {
+        colorName: "黃槿",
+        enColorName: "Sea Hibiscus",
+        cIntText: "0",
+        mIntText: "14",
+        yIntText: "62",
+        kIntText: "6",
+        rIntText: "240",
+        gIntText: "207",
+        bIntText: "90",
+        hexText:"#F0CF5A",
+    },
+
+    17: {
+        colorName: "烏龍茶湯",
+        enColorName: "Oolong Tea",
+        cIntText: "0",
+        mIntText: "26",
+        yIntText: "71",
+        kIntText: "21",
+        rIntText: "201",
+        gIntText: "149",
+        bIntText: "59",
+        hexText:"#C9953B",
+    },
+
 };

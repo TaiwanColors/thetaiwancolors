@@ -89,4 +89,75 @@ const blueButtonTextMap = {
         bIntText: "179",
         hexText:"#61A4B3",
     },
+
+    // ===== 額外加入：台灣特色色（2026-11-11 新增）=====
+    // 依台灣的自然、地景、物產與日常命名；CMYK 為 RGB 直接換算的近似值。
+    // 有出處的顏色另外標註來源，其餘色值為自訂。
+
+    8: {
+        colorName: "藍鵲",
+        enColorName: "Blue Magpie",
+        cIntText: "72",
+        mIntText: "42",
+        yIntText: "0",
+        kIntText: "37",
+        rIntText: "45",
+        gIntText: "93",
+        bIntText: "161",
+        hexText:"#2D5DA1",
+    },
+
+    9: {
+        colorName: "藍白拖",
+        enColorName: "Blue-White Slippers",
+        cIntText: "65",
+        mIntText: "43",
+        yIntText: "0",
+        kIntText: "34",
+        rIntText: "59",
+        gIntText: "95",
+        bIntText: "168",
+        hexText:"#3B5FA8",
+    },
+
+    10: {
+        colorName: "藍染",
+        enColorName: "Indigo Dye",
+        cIntText: "57",
+        mIntText: "41",
+        yIntText: "0",
+        kIntText: "58",
+        rIntText: "46",
+        gIntText: "63",
+        bIntText: "107",
+        hexText:"#2E3F6B",
+    },
+
+    11: {
+        colorName: "雲海",
+        enColorName: "Sea of Clouds",
+        cIntText: "11",
+        mIntText: "6",
+        yIntText: "0",
+        kIntText: "11",
+        rIntText: "201",
+        gIntText: "214",
+        bIntText: "227",
+        hexText:"#C9D6E3",
+    },
+
+    // 台灣青：取文化部「台灣青」意象，色值自訂
+    12: {
+        colorName: "台灣青",
+        enColorName: "Taiwan Cyan",
+        cIntText: "61",
+        mIntText: "10",
+        yIntText: "0",
+        kIntText: "38",
+        rIntText: "62",
+        gIntText: "142",
+        bIntText: "158",
+        hexText:"#3E8E9E",
+    },
+
 };

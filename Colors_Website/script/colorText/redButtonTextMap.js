@@ -88,4 +88,100 @@ const redButtonTextMap = {
         bIntText: "109",
         hexText:"#80356D",
     },
+
+    // ===== 額外加入：台灣特色色（2026-11-11 新增）=====
+    // 依台灣的自然、地景、物產與日常命名；CMYK 為 RGB 直接換算的近似值。
+    // 有出處的顏色另外標註來源，其餘色值為自訂。
+
+    8: {
+        colorName: "喜廟",
+        enColorName: "Festive Temple",
+        cIntText: "0",
+        mIntText: "75",
+        yIntText: "79",
+        kIntText: "22",
+        rIntText: "200",
+        gIntText: "50",
+        bIntText: "42",
+        hexText:"#C8322A",
+    },
+
+    9: {
+        colorName: "山櫻花",
+        enColorName: "Taiwan Cherry",
+        cIntText: "0",
+        mIntText: "63",
+        yIntText: "49",
+        kIntText: "15",
+        rIntText: "217",
+        gIntText: "80",
+        bIntText: "110",
+        hexText:"#D9506E",
+    },
+
+    10: {
+        colorName: "紅龜粿",
+        enColorName: "Red Turtle Cake",
+        cIntText: "0",
+        mIntText: "63",
+        yIntText: "63",
+        kIntText: "21",
+        rIntText: "201",
+        gIntText: "74",
+        bIntText: "74",
+        hexText:"#C94A4A",
+    },
+
+    11: {
+        colorName: "鳳凰木",
+        enColorName: "Flame Tree",
+        cIntText: "0",
+        mIntText: "69",
+        yIntText: "80",
+        kIntText: "15",
+        rIntText: "216",
+        gIntText: "67",
+        bIntText: "44",
+        hexText:"#D8432C",
+    },
+
+    12: {
+        colorName: "蓮霧",
+        enColorName: "Wax Apple",
+        cIntText: "0",
+        mIntText: "67",
+        yIntText: "58",
+        kIntText: "15",
+        rIntText: "216",
+        gIntText: "71",
+        bIntText: "90",
+        hexText:"#D8475A",
+    },
+
+    13: {
+        colorName: "紅豆",
+        enColorName: "Red Bean",
+        cIntText: "0",
+        mIntText: "63",
+        yIntText: "63",
+        kIntText: "51",
+        rIntText: "126",
+        gIntText: "46",
+        bIntText: "46",
+        hexText:"#7E2E2E",
+    },
+
+    14: {
+        colorName: "玫瑰石",
+        enColorName: "Hualien Rhodonite",
+        cIntText: "0",
+        mIntText: "43",
+        yIntText: "39",
+        kIntText: "29",
+        rIntText: "181",
+        gIntText: "104",
+        bIntText: "110",
+        hexText:"#B5686E",
+    },
+
 };

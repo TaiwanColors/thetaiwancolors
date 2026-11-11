@@ -11,13 +11,17 @@ document.addEventListener("DOMContentLoaded", function () {
         purple: Object.values(purpleButtonTextMap),
         blue: Object.values(blueButtonTextMap),
         green: Object.values(greenButtonTextMap),
+        theme: Object.values(themeButtonTextMap), // 主題色：一定全部出現
     };
 
     createButtons();
 
     function createButtons() {
         for (var color in colorDomains) {
-            var selectedButtonData = getRandomButtonData(colorDomains[color], numberOfButtonsToDisplay);
+            // 主題色每次都全部放出來；其他色系照原本隨機挑 numberOfButtonsToDisplay 個
+            var selectedButtonData = color === "theme"
+                ? colorDomains[color].slice()
+                : getRandomButtonData(colorDomains[color], numberOfButtonsToDisplay);
             selectedButtonData.forEach(function (data) {
                 var circleButton = document.createElement("div");
                 circleButton.classList.add("circle-button");
@@ -72,6 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var buttonDataCopy = [...buttonData];
         var selectedData = [];
 
+        number = Math.min(number, buttonDataCopy.length); // 色系裡的顏色不夠多時，有幾個拿幾個
         for (var i = 0; i < number; i++) {
             var randomIndex = Math.floor(Math.random() * buttonDataCopy.length);
 

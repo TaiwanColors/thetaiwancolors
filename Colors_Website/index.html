@@ -14,6 +14,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500&family=Noto+Serif+TC:wght@600&family=Pacifico&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- 載入畫面：網頁一打開就顯示，全部載入後淡出（script/loading.js） -->
+  <div id="loading" aria-label="Loading">
+    <img class="loading-logo" src="image/colorsLogo.svg" alt="COLORS">
+    <div class="loading-scene">
+      <span class="loading-line"></span>
+      <svg class="loading-hook" viewBox="-9 -1 11 13" aria-hidden="true"><path d="M0,0 V7 a3.5,3.5 0 0 1 -7,0 v-2"/></svg>
+      <div class="loading-wave-box" aria-hidden="true">
+        <svg class="loading-wave" viewBox="0 0 200 12" aria-hidden="true"><path d="M0,6 Q10,1.5 20,6 T40,6 T60,6 T80,6 T100,6 T120,6 T140,6 T160,6 T180,6 T200,6"/></svg>
+      </div>
+      <!-- 色球左右各三顆、以中間的魚鉤為中心對稱（--x 是色球中心離左邊幾 px，畫面寬 160） -->
+      <span class="loading-dot" style="--x:14px;  --c:#e2b84f; --d:0s"></span>
+      <span class="loading-dot" style="--x:38px;  --c:#fe8771; --d:.2s"></span>
+      <span class="loading-dot" style="--x:60px;  --c:#d06363; --d:.4s"></span>
+      <span class="loading-dot" style="--x:100px; --c:#c34e87; --d:.6s"></span>
+      <span class="loading-dot" style="--x:122px; --c:#6f9bb8; --d:.8s"></span>
+      <span class="loading-dot" style="--x:146px; --c:#7ec6bb; --d:1s"></span>
+    </div>
+    <p class="loading-text">LOADING</p>
+  </div>
+  <script src="script/loading.js"></script>
   <script src="script/script.js"></script>
   <script src="script/boatanimation.js"> </script>
   <script src="script/hyperline.js"> </script>
@@ -26,6 +46,7 @@
   <script src="script/colorText/purpleButtonTextMap.js"> </script>
   <script src="script/colorText/blueButtonTextMap.js"> </script>
   <script src="script/colorText/greenButtonTextMap.js"> </script>
+  <script src="script/colorText/themeButtonTextMap.js"> </script>
   <script src="script/changebgcolors.js"> </script>
   <script src="script/buttonanimation.js"> </script>
   <script src="script/wavebones.js"> </script>

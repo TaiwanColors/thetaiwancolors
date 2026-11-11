@@ -1,21 +1,20 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // 獲取 Instagram 文字元素
-    const instagramLink = document.getElementById("instagram-link");
+    // 社群連結（點文字開新分頁）
+    // 舊的連結先備註留著：
+    //   Instagram: https://www.instagram.com/taiwan_colors/
+    //   YouTube:   （原本沒有設定連結）
+    //   Threads:   https://www.threads.com/@quill_its_too_late?igshid=NTc4MTIwNjQ2YQ==
+    const LINKS = {
+        "instagram-link": "https://www.instagram.com/schuanglawyer/",
+        "YouTube-link":   "https://www.youtube.com/watch?v=BSJEFkm9vZM",
+        "threads-link":   "https://www.threads.com/@schuanglawyer?hl=zh-tw",
+    };
 
-    // 新增單擊事件監聽器
-    instagramLink.addEventListener("click", function() {
-        // 在此處指定外部網站的URL
-        const externalUrl = "https://www.instagram.com/taiwan_colors/"; // 將此連結替換為您想要的外部網站連結
-
-        // 使用 window.open() 開啟外部連結
-        window.open(externalUrl, "_blank");
-    });
-
-    // Threads
-    const threadsLink = document.getElementById("threads-link");
-    if (threadsLink) {
-        threadsLink.addEventListener("click", function () {
-            window.open("https://www.threads.com/@quill_its_too_late?igshid=NTc4MTIwNjQ2YQ==", "_blank");
+    Object.keys(LINKS).forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("click", function () {
+            window.open(LINKS[id], "_blank");
         });
-    }
+    });
 });

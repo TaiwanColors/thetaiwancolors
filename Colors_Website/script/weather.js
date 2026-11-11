@@ -14,6 +14,7 @@
  *   - 速度用「每秒幾 px」，任何更新率都一樣
  *   - 雨、雪都關掉、最後一滴落完之後，迴圈完全停止
  *   - 碰到海面（waves.js 的海面曲線）：雨濺起小水滴＋漣漪；雪慢慢下沉、縮小、融化
+ *   - 部分落在船上（fishing.js 量出的船上緣）：雨只濺水滴、雪原地融化，都沒有漣漪
  *   - 外觀沿用原本：雨是細線（顏色規則相同），雪用原本的 snowflake_*.png
  *   - 按鈕小圖示：關著時是靜止的一張（40% 不透明），打開時才動
  */
@@ -39,6 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
         rippleSize: 9,             // 漣漪最大半徑 (px)
         rippleLife: 0.45,          // 漣漪持續秒數
         meltTime: 1.2,             // 雪花碰到海面後融化的秒數
+        boatShare: 0.5,            // 落在船上方的雨雪，有幾成會打在船上（其餘當作從船前後經過、落到海面）
     };
     const SNOW = {
         spawnEvery: 0.2,           // 每幾秒落下一片（原本 200ms）
@@ -127,12 +129,14 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== 粒子 =====
     function newRainDrop(w, top) {
         return { x: Math.floor(rand(0, w)), y: top, v: rand(RAIN.speed[0], RAIN.speed[1]), len: rand(RAIN.length[0], RAIN.length[1]),
-            layer: Math.random() < 0.5 ? 0 : 1 }; // 落在第幾層海面
+            layer: Math.random() < 0.5 ? 0 : 1,   // 落在第幾層海面
+            boatHit: Math.random() < SEA.boatShare }; // 經過船上方時會不會打在船上
     }
     function newFlake(w, top, imgs, speed, sway) {
         return { x: rand(0, w), y: top, v: rand(speed[0], speed[1]), sway: rand(sway[0], sway[1]),
             img: imgs[Math.floor(Math.random() * imgs.length)],
-            layer: Math.random() < 0.5 ? 0 : 1 }; // 落在第幾層海面
+            layer: Math.random() < 0.5 ? 0 : 1,   // 落在第幾層海面
+            boatHit: Math.random() < SEA.boatShare }; // 經過船上方時會不會打在船上
     }
 
     // 按鈕裡的初始雨滴／雪花（同原本：散在框裡）
@@ -173,7 +177,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 ctx.rect(p.mx - 2, 0, size + 4, p.sy);
                 ctx.clip();
                 ctx.globalAlpha = (1 - k) * (1 - k);
-                ctx.drawImage(p.img, p.mx + (size - sz) / 2, p.y + (size - sz), sz, sz);
+                const ox = p.boat && window.boatSway ? window.boatSway.x - p.bx0 : 0;
+                const oy = p.boat && window.boatSway ? window.boatSway.y - p.by0 : 0;
+                ctx.drawImage(p.img, p.mx + ox + (size - sz) / 2, p.y + oy + (size - sz), sz, sz);
                 ctx.restore();
             }
         }
@@ -200,19 +206,42 @@ document.addEventListener("DOMContentLoaded", function () {
         const y = window.seaSurfaceAt ? window.seaSurfaceAt(x + off.x, layer) - off.y : h;
         return Math.min(h, y);
     }
+    // 這顆粒子要落在哪（同時記下 p.onBoat、p.behind）：
+    //   船在這一欄、而且在海面上方：
+    //     會打在船上 → 船的上緣（onBoat：濺水滴／原地融化，沒有漣漪）
+    //     不打在船上 → 當作從船後面經過，碰到船的上緣就被船擋住、直接消失（behind）
+    //   否則 → 海面
+    function landY(off, x, h, p) {
+        const sea = seaY(off, x, h, p.layer);
+        p.onBoat = false; p.behind = false;
+        if (window.boatSurfaceAt) {
+            const b = window.boatSurfaceAt(x + off.x) - off.y;
+            if (b < sea) {
+                if (p.boatHit) p.onBoat = true; else p.behind = true;
+                return b;
+            }
+        }
+        return sea;
+    }
 
     // 雨：雨絲底端碰到海面 → 濺起 2~3 顆小水滴 + 一圈漣漪
     function stepRain(dt) {
         const L = rain.layer, parts = rain.parts;
         for (let i = parts.length - 1; i >= 0; i--) {
             const p = parts[i];
-            const sy = seaY(rainOff, p.x, L.h, p.layer);
+            const sy = landY(rainOff, p.x, L.h, p);
+            if (p.hit && p.behind) {
+                // 從船後面經過：被船擋住，不濺水花
+                parts[i] = parts[parts.length - 1]; parts.pop();
+                continue;
+            }
             if (p.hit) {
-                // 上一幀已經貼在海面上（畫面上看得到雨真的碰到水）→ 這一幀才濺起水花
-                rain.ripples.push({ x: p.x, y: sy, t: 0, life: SEA.rippleLife, size: SEA.rippleSize });
+                // 上一幀已經貼在海面（或船上）→ 這一幀才濺起水花；船上不是水，所以沒有漣漪
+                if (!p.onBoat) rain.ripples.push({ x: p.x, y: sy, t: 0, life: SEA.rippleLife, size: SEA.rippleSize });
                 const n = 2 + (Math.random() < 0.5 ? 1 : 0);
+                const sp = p.onBoat ? 0.75 : 1; // 打在船上濺得低一點
                 for (let k = 0; k < n; k++) {
-                    rain.drops.push({ x: p.x, y: sy - 1, y0: sy, vx: rand(-45, 45), vy: -rand(SEA.splashSpeed[0], SEA.splashSpeed[1]) });
+                    rain.drops.push({ x: p.x, y: sy - 1, y0: sy, vx: rand(-45, 45), vy: -rand(SEA.splashSpeed[0], SEA.splashSpeed[1]) * sp });
                 }
                 parts[i] = parts[parts.length - 1]; parts.pop();
                 continue;
@@ -242,19 +271,34 @@ document.addEventListener("DOMContentLoaded", function () {
             if (p.melt === undefined) {
                 p.y += p.v * dt;
                 const x = p.x + p.sway * Math.sin(p.y / SNOW.swayPeriod);
-                const sy = seaY(snowOff, x + SNOW.size / 2, L.h, p.layer);
-                if (p.y + SNOW.size >= sy) {
-                    // 雪花底部真的碰到海面才開始融化
+                const sy = landY(snowOff, x + SNOW.size / 2, L.h, p);
+                if (p.behind && p.y + SNOW.size / 2 >= sy) {
+                    // 從船後面經過：飄到船的上緣就被船擋住
+                    parts[i] = parts[parts.length - 1]; parts.pop();
+                    continue;
+                }
+                if (!p.behind && p.y + SNOW.size >= sy) {
+                    // 雪花底部真的碰到海面（或船上）才開始融化
                     p.y = sy - SNOW.size;
                     p.melt = 0;
-                    p.mx = x; // 固定在碰到海面的位置
-                    p.sy = sy;
-                    snow.ripples.push({ x: x + SNOW.size / 2, y: sy, t: 0, life: SEA.meltTime, size: 5 });
+                    p.mx = x; // 固定在碰到的位置
+                    if (p.onBoat) {
+                        // 落在船上：原地融化（不下沉、沒有漣漪），跟著船一起晃
+                        p.boat = true;
+                        p.sy = 1e5;
+                        p.bx0 = window.boatSway ? window.boatSway.x : 0;
+                        p.by0 = window.boatSway ? window.boatSway.y : 0;
+                    } else {
+                        p.sy = sy;
+                        snow.ripples.push({ x: x + SNOW.size / 2, y: sy, t: 0, life: SEA.meltTime, size: 5 });
+                    }
                 }
             } else {
                 p.melt += dt;
-                p.y += p.v * 0.12 * dt;
-                p.sy = seaY(snowOff, p.mx + SNOW.size / 2, L.h, p.layer); // 海面會起伏，跟著更新
+                if (!p.boat) {
+                    p.y += p.v * 0.12 * dt;
+                    p.sy = seaY(snowOff, p.mx + SNOW.size / 2, L.h, p.layer); // 海面會起伏，跟著更新
+                }
                 if (p.melt >= SEA.meltTime) { parts[i] = parts[parts.length - 1]; parts.pop(); }
             }
         }

@@ -26,19 +26,6 @@ const orangeButtonTextMap = {
     },
 
     3: {
-        colorName: "稻穗",
-        enColorName: "Straw",
-        cIntText: "11",
-        mIntText: "25",
-        yIntText: "60",
-        kIntText: "0",
-        rIntText: "226",
-        gIntText: "198",
-        bIntText: "127",
-        hexText:"#E2C67F",
-    },
-
-    4: {
         colorName: "蜜",
         enColorName: "Honey",
         cIntText: "4",
@@ -51,7 +38,7 @@ const orangeButtonTextMap = {
         hexText:"#EDC76E",
     },
 
-    5: {
+    4: {
         colorName: "琥珀",
         enColorName: "Anbar",
         cIntText: "15",
@@ -64,7 +51,7 @@ const orangeButtonTextMap = {
         hexText:"#CCA63C",
     },
 
-    6: {
+    5: {
         colorName: "麥",
         enColorName: "Aureate",
         cIntText: "10",
@@ -77,7 +64,7 @@ const orangeButtonTextMap = {
         hexText:"#E9D969",
     },
 
-    7: {
+    6: {
         colorName: "橄欖",
         enColorName: "Olives",
         cIntText: "51",
@@ -89,4 +76,127 @@ const orangeButtonTextMap = {
         bIntText: "75",
         hexText:"#8B8A4B",
     },
+
+    // ===== 額外加入：台灣特色色（2026-11-11 新增）=====
+    // 依台灣的自然、地景、物產與日常命名；CMYK 為 RGB 直接換算的近似值。
+    // 有出處的顏色另外標註來源，其餘色值為自訂。
+
+    // 采風橘：色值出自《台灣服飾誌》，取自清代台灣風俗圖
+    7: {
+        colorName: "采風橘",
+        enColorName: "Caifeng Orange",
+        cIntText: "0",
+        mIntText: "53",
+        yIntText: "78",
+        kIntText: "15",
+        rIntText: "218",
+        gIntText: "103",
+        bIntText: "49",
+        hexText:"#DA6731",
+    },
+
+    8: {
+        colorName: "柿餅",
+        enColorName: "Dried Persimmon",
+        cIntText: "0",
+        mIntText: "44",
+        yIntText: "73",
+        kIntText: "15",
+        rIntText: "217",
+        gIntText: "122",
+        bIntText: "58",
+        hexText:"#D97A3A",
+    },
+
+    9: {
+        colorName: "烏魚子",
+        enColorName: "Mullet Roe",
+        cIntText: "0",
+        mIntText: "50",
+        yIntText: "78",
+        kIntText: "22",
+        rIntText: "200",
+        gIntText: "101",
+        bIntText: "43",
+        hexText:"#C8652B",
+    },
+
+    10: {
+        colorName: "老磚",
+        enColorName: "Old Brick",
+        cIntText: "0",
+        mIntText: "47",
+        yIntText: "67",
+        kIntText: "29",
+        rIntText: "181",
+        gIntText: "96",
+        bIntText: "60",
+        hexText:"#B5603C",
+    },
+
+    11: {
+        colorName: "淡水夕照",
+        enColorName: "Tamsui Sunset",
+        cIntText: "0",
+        mIntText: "38",
+        yIntText: "62",
+        kIntText: "6",
+        rIntText: "240",
+        gIntText: "149",
+        bIntText: "90",
+        hexText:"#F0955A",
+    },
+
+    12: {
+        colorName: "椪柑",
+        enColorName: "Ponkan",
+        cIntText: "0",
+        mIntText: "37",
+        yIntText: "82",
+        kIntText: "5",
+        rIntText: "243",
+        gIntText: "154",
+        bIntText: "43",
+        hexText:"#F39A2B",
+    },
+
+    13: {
+        colorName: "地瓜",
+        enColorName: "Sweet Potato",
+        cIntText: "0",
+        mIntText: "38",
+        yIntText: "73",
+        kIntText: "12",
+        rIntText: "224",
+        gIntText: "138",
+        bIntText: "60",
+        hexText:"#E08A3C",
+    },
+
+    14: {
+        colorName: "木棉花",
+        enColorName: "Kapok Blossom",
+        cIntText: "0",
+        mIntText: "55",
+        yIntText: "75",
+        kIntText: "10",
+        rIntText: "229",
+        gIntText: "104",
+        bIntText: "58",
+        hexText:"#E5683A",
+    },
+
+    15: {
+        colorName: "紅玉",
+        enColorName: "Ruby Black Tea",
+        cIntText: "0",
+        mIntText: "50",
+        yIntText: "75",
+        kIntText: "34",
+        rIntText: "169",
+        gIntText: "84",
+        bIntText: "42",
+        hexText:"#A9542A",
+    },
+
 };

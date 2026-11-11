@@ -69,6 +69,9 @@ window.addEventListener("load", function() {
             case "green":
                 buttonTextMap = greenButtonTextMap;
                 break;
+            case "theme":
+                buttonTextMap = themeButtonTextMap; // 主題色
+                break;
             // 可以根據需要新增更多的顏色
         }
 

@@ -89,4 +89,126 @@ const purpleButtonTextMap = {
         bIntText: "82",
         hexText:"#3A2D52",
     },
+
+    // ===== 額外加入：台灣特色色（2026-11-11 新增）=====
+    // 依台灣的自然、地景、物產與日常命名；CMYK 為 RGB 直接換算的近似值。
+    // 有出處的顏色另外標註來源，其餘色值為自訂。
+
+    8: {
+        colorName: "紫斑蝶",
+        enColorName: "Purple Crow Butterfly",
+        cIntText: "25",
+        mIntText: "39",
+        yIntText: "0",
+        kIntText: "52",
+        rIntText: "91",
+        gIntText: "74",
+        bIntText: "122",
+        hexText:"#5B4A7A",
+    },
+
+    9: {
+        colorName: "芋頭",
+        enColorName: "Taro",
+        cIntText: "8",
+        mIntText: "19",
+        yIntText: "0",
+        kIntText: "22",
+        rIntText: "184",
+        gIntText: "162",
+        bIntText: "200",
+        hexText:"#B8A2C8",
+    },
+
+    10: {
+        colorName: "洛神花",
+        enColorName: "Roselle",
+        cIntText: "0",
+        mIntText: "67",
+        yIntText: "44",
+        kIntText: "44",
+        rIntText: "142",
+        gIntText: "47",
+        bIntText: "79",
+        hexText:"#8E2F4F",
+    },
+
+    11: {
+        colorName: "九重葛",
+        enColorName: "Bougainvillea",
+        cIntText: "0",
+        mIntText: "70",
+        yIntText: "31",
+        kIntText: "31",
+        rIntText: "176",
+        gIntText: "53",
+        bIntText: "122",
+        hexText:"#B0357A",
+    },
+
+    12: {
+        colorName: "紫米",
+        enColorName: "Purple Rice",
+        cIntText: "0",
+        mIntText: "38",
+        yIntText: "10",
+        kIntText: "63",
+        rIntText: "94",
+        gIntText: "58",
+        bIntText: "85",
+        hexText:"#5E3A55",
+    },
+
+    13: {
+        colorName: "苦楝花",
+        enColorName: "Chinaberry Blossom",
+        cIntText: "11",
+        mIntText: "20",
+        yIntText: "0",
+        kIntText: "18",
+        rIntText: "185",
+        gIntText: "166",
+        bIntText: "208",
+        hexText:"#B9A6D0",
+    },
+
+    14: {
+        colorName: "牽牛花",
+        enColorName: "Morning Glory",
+        cIntText: "32",
+        mIntText: "43",
+        yIntText: "0",
+        kIntText: "29",
+        rIntText: "123",
+        gIntText: "104",
+        bIntText: "181",
+        hexText:"#7B68B5",
+    },
+
+    15: {
+        colorName: "巨峰葡萄",
+        enColorName: "Kyoho Grape",
+        cIntText: "12",
+        mIntText: "48",
+        yIntText: "0",
+        kIntText: "65",
+        rIntText: "79",
+        gIntText: "47",
+        bIntText: "90",
+        hexText:"#4F2F5A",
+    },
+
+    16: {
+        colorName: "夜市霓虹",
+        enColorName: "Night Market Neon",
+        cIntText: "21",
+        mIntText: "55",
+        yIntText: "0",
+        kIntText: "31",
+        rIntText: "139",
+        gIntText: "79",
+        bIntText: "176",
+        hexText:"#8B4FB0",
+    },
+
 };

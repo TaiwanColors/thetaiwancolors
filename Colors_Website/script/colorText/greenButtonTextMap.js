@@ -77,4 +77,100 @@ const greenButtonTextMap = {
         hexText:"#163126",
     },
 
+    // ===== 額外加入：台灣特色色（2026-11-11 新增）=====
+    // 依台灣的自然、地景、物產與日常命名；CMYK 為 RGB 直接換算的近似值。
+    // 有出處的顏色另外標註來源，其餘色值為自訂。
+
+    // 福爾摩沙：文化部台灣代表色 Formosan Green（Pantone 3295 C），色值為換算近似值
+    7: {
+        colorName: "福爾摩沙",
+        enColorName: "Formosa",
+        cIntText: "100",
+        mIntText: "0",
+        yIntText: "17",
+        kIntText: "53",
+        rIntText: "0",
+        gIntText: "120",
+        bIntText: "100",
+        hexText:"#007864",
+    },
+
+    8: {
+        colorName: "檜木林",
+        enColorName: "Cypress Forest",
+        cIntText: "42",
+        mIntText: "0",
+        yIntText: "27",
+        kIntText: "58",
+        rIntText: "62",
+        gIntText: "107",
+        bIntText: "78",
+        hexText:"#3E6B4E",
+    },
+
+    9: {
+        colorName: "碧螺春",
+        enColorName: "Biluochun Tea",
+        cIntText: "8",
+        mIntText: "0",
+        yIntText: "44",
+        kIntText: "28",
+        rIntText: "169",
+        gIntText: "184",
+        bIntText: "103",
+        hexText:"#A9B867",
+    },
+
+    10: {
+        colorName: "芭樂",
+        enColorName: "Guava",
+        cIntText: "16",
+        mIntText: "0",
+        yIntText: "46",
+        kIntText: "22",
+        rIntText: "167",
+        gIntText: "198",
+        bIntText: "106",
+        hexText:"#A7C66A",
+    },
+
+    11: {
+        colorName: "青草茶",
+        enColorName: "Herbal Tea",
+        cIntText: "12",
+        mIntText: "0",
+        yIntText: "52",
+        kIntText: "58",
+        rIntText: "94",
+        gIntText: "107",
+        bIntText: "51",
+        hexText:"#5E6B33",
+    },
+
+    12: {
+        colorName: "孟宗竹",
+        enColorName: "Moso Bamboo",
+        cIntText: "20",
+        mIntText: "0",
+        yIntText: "49",
+        kIntText: "39",
+        rIntText: "125",
+        gIntText: "156",
+        bIntText: "79",
+        hexText:"#7D9C4F",
+    },
+
+    13: {
+        colorName: "芒果青",
+        enColorName: "Green Mango",
+        cIntText: "7",
+        mIntText: "0",
+        yIntText: "62",
+        kIntText: "24",
+        rIntText: "181",
+        gIntText: "194",
+        bIntText: "74",
+        hexText:"#B5C24A",
+    },
+
 };
