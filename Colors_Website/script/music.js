@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
     EVENTS.forEach(function (ev) { window.addEventListener(ev, tryPlay, { capture: true, passive: true }); });
 
     // 給載入畫面用：音樂是否已經在播（瀏覽器允許自動播放時，就不用再請訪客點擊）
-    window.music = { isPlaying: function () { return playing; }, start: tryPlay };
+    window.music = { isPlaying: function () { return playing; }, start: tryPlay, audio: audio };
 
     tryPlay();
 });

@@ -1315,8 +1315,7 @@ body.color-info-reveal .Hex-int-text {
     font-size: 11px;
     letter-spacing: 0.45em;
     padding-left: 0.45em; /* 字距會在最後一個字後面多一段空白，左邊補同樣寬，整行才置中 */
-    color: rgba(255, 255, 255, 0.55);
-    animation: loading-text 2.4s ease-in-out infinite;
+    color: rgba(255, 255, 255, 0.5); /* LOADING：固定 50% 透明度 */
 }
 
 @keyframes loading-line {
@@ -1351,10 +1350,7 @@ body.color-info-reveal .Hex-int-text {
     50%      { opacity: 1; }
 }
 
-@keyframes loading-text {
-    0%, 100% { opacity: 0.45; }
-    50%      { opacity: 0.85; }
-}
+
 
 
 /* ===== 防止拖曳到圖片（船、標誌、瓶子…） =====
@@ -1365,4 +1361,3 @@ img, svg, object, canvas {
     -webkit-user-select: none;
     user-select: none;
 }
-
