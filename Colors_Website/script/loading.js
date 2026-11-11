@@ -3,10 +3,10 @@
  *
  * 網頁一打開就顯示 #loading（寫在 index.html 最前面），等整個頁面（圖片、船、字型）載入完成：
  *   - 如果瀏覽器已經允許音樂自動播放 → 直接淡出進入網站
- *   - 否則把「LOADING」換成「點擊進入」，訪客點一下（或按任意鍵）就淡出，
+ *   - 否則把「LOADING」換成「確定出航」，訪客點一下（或按任意鍵）就淡出，
  *     同一下點擊也讓音樂開始播放（music.js 會在第一次點擊時播放）——進到網站時就有音樂了。
  *     （瀏覽器規定：訪客沒有互動過之前，網頁不能自動播放有聲音的音樂）
- * 至少顯示 MIN_SHOW 秒，避免一閃而過；萬一載入很久，MAX_WAIT 秒後也會顯示「點擊進入」。
+ * 至少顯示 MIN_SHOW 秒，避免一閃而過；萬一載入很久，MAX_WAIT 秒後也會顯示「確定出航」。
  */
 (function () {
     "use strict";
@@ -37,7 +37,7 @@
         if (!el) return;
         el.classList.add("loading-ready");
         const text = el.querySelector(".loading-text");
-        if (text) text.textContent = "點擊進入";
+        if (text) text.textContent = "確定出航";
         const enter = function () {
             window.removeEventListener("pointerdown", enter, true);
             window.removeEventListener("keydown", enter, true);
