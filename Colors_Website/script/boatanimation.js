@@ -69,7 +69,8 @@ buttons.forEach(function(button) {
         // 獲取要更改顏色的路徑元素
         var pathElement = svgDoc.querySelector("path"); // 請確保選擇正確的路徑元素
 
-        // 更改填充顏色
+        // 更改填充顏色（跟背景一樣 2.5 秒漸變；SVG 在 <object> 裡，外面的 CSS 管不到，所以在這裡設）
+        pathElement.style.transition = "fill 2.5s";
         pathElement.style.fill = bgColor; // 設定填充顏色為按鈕的背景顏色
     });
 });

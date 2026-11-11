@@ -146,18 +146,4 @@ const blueButtonTextMap = {
         hexText:"#C9D6E3",
     },
 
-    // 台灣青：取文化部「台灣青」意象，色值自訂
-    12: {
-        colorName: "台灣青",
-        enColorName: "Taiwan Cyan",
-        cIntText: "61",
-        mIntText: "10",
-        yIntText: "0",
-        kIntText: "38",
-        rIntText: "62",
-        gIntText: "142",
-        bIntText: "158",
-        hexText:"#3E8E9E",
-    },
-
 };

@@ -87,7 +87,7 @@ html, body {
     right:32px;
     z-index: 10; 
     overflow: hidden;
-    transition:opacity ease-out 1s;
+    transition:opacity ease-out 1s, background-color 2.5s; /* 換色時底色跟著背景漸變 */
 }
 
 .raindropB {
@@ -109,7 +109,7 @@ html, body {
     right:32px;
     z-index: 10; 
     overflow: hidden;
-    transition:opacity ease-out 1s;
+    transition:opacity ease-out 1s, background-color 2.5s; /* 換色時底色跟著背景漸變 */
 }
 
 
@@ -125,7 +125,7 @@ html, body {
     right:32px;
     z-index: 10; 
     overflow: hidden;
-    transition:opacity ease-out 1s;
+    transition:opacity ease-out 1s, background-color 2.5s; /* 換色時底色跟著背景漸變 */
 }
 
 #starryskyButton{
@@ -138,7 +138,7 @@ html, body {
     right:32px;
     z-index: 10; 
     overflow: hidden;
-    transition:opacity ease-out 1s;
+    transition:opacity ease-out 1s, background-color 2.5s; /* 換色時底色跟著背景漸變 */
 }
 
 .starlightB_1 {/*按鈕的星星*/
@@ -638,7 +638,8 @@ html, body {
     z-index: -1;
     left: 0;
     top: 0;
-    transition: background-color 2.5s;  
+    /* 背景換色的 2.5 秒漸變改由 changebgcolors.js 的 fadeBackground 處理
+       （CSS transition 偶爾在結束那一幀閃回舊顏色） */
 }
 
 
@@ -700,7 +701,7 @@ html, body {
     pointer-events: none;
     user-select: none;
     opacity:0.12;
-    transition: filll 0.01s ease,opactity 0.1s ease;
+    transition: opacity 0.1s ease; /* （原本 filll / opactity 拼錯，沒有作用；船燈顏色的漸變在 boatanimation.js 設定） */
     z-index: 1;
 
 }
@@ -788,6 +789,8 @@ body {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-dasharray: 0 6; /* 圓頭 + 0 長度虛線 = 一串小圓點，跟原本的點點線一樣 */
+    /* 換色時黑↔白慢慢漸變，跟著背景（不然會「閃」一下） */
+    transition: stroke 2.5s;
 }
 
 .fishing-hook {
@@ -795,6 +798,7 @@ body {
     stroke: var(--fishing-line);
     stroke-width: 1.5;
     stroke-linecap: round;
+    transition: stroke 2.5s;
 }
 
 .fishing-splash {
@@ -939,6 +943,7 @@ body.color-info-reveal .Hex-int-text {
     stroke: var(--water-line, rgba(255, 255, 255, 0.55));
     stroke-width: 0.7;
     stroke-linecap: round;
+    transition: stroke 2.5s;
 }
 
 .bottle-glass {
@@ -958,6 +963,7 @@ body.color-info-reveal .Hex-int-text {
     stroke-width: 1.1;
     stroke-linejoin: round;
     stroke-linecap: round;
+    transition: stroke 2.5s;
 }
 
 .bottle-glass .glass-rim {
