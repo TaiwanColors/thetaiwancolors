@@ -41,6 +41,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             var HexIntText = document.getElementById("HexintText-link");
 
+            // 文字顏色等舊文字淡出後才換（changetext.js 的 colorInfoSwap）
+            window.colorInfoSwap(function () {
             // 如果亮度或彩度大於閾值，將 M-text 和 M-int-text 的顏色更改為黑色和帶透明度的黑色
             if (brightness > 190 || saturation > 80) {
                 
@@ -103,6 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 starryskyButton.style.background = "rgba(0, 0, 0, 0)";
 
             }
+            });
         });
     });
 

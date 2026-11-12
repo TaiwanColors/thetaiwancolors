@@ -817,6 +817,16 @@ window.addEventListener("load", function () {
         clampSchool(f);
     }
     // 群游中的魚可以超出畫面左右與下方（最多 CFG.schoolOvershoot），只有海面擋著
+    // 魚鉤附近（80px 內）還在游的魚被嚇跑：轉頭背對魚鉤、加速游開（空鉤與釣起來都會用）
+    function scareNearby() {
+        for (let i = 0; i < fish.length; i++) {
+            const g = fish[i];
+            if (g.mode !== "swim") continue;
+            const ddx = g.x - (hx - swayX), ddy = g.y - (hy - swayY);
+            if (ddx * ddx + ddy * ddy < 80 * 80) { g.h = Math.atan2(ddy, ddx); g.flee = 0.5; }
+        }
+    }
+
     function clampSchool(f) {
         const o = CFG.schoolOvershoot;
         f.x = clamp(f.x, B.l - o, B.r + o);
@@ -990,6 +1000,7 @@ window.addEventListener("load", function () {
                     buzz(15);               // 手機震動：鉤到了
                     if (window.sfx) window.sfx.play("catch"); // 釣起來的音效（sfx.js）
                     f.mode = "hooked";
+                    scareNearby();          // 釣起來時，附近的魚也一樣被嚇跑
                     splash(hx + bendDX(), hy + bendDY());
                     setState("fly");
                 } else {
@@ -999,12 +1010,7 @@ window.addEventListener("load", function () {
                     yankT = 0.5; // 約等於彈到最高點的時間
                     recoverT = 0;
                     airYanks = 1;
-                    for (let i = 0; i < fish.length; i++) {
-                        const g = fish[i];
-                        if (g.mode !== "swim") continue;
-                        const ddx = g.x - (hx - swayX), ddy = g.y - (hy - swayY);
-                        if (ddx * ddx + ddy * ddy < 80 * 80) { g.h = Math.atan2(ddy, ddx); g.flee = 0.5; }
-                    }
+                    scareNearby();
                 }
             }
         }
@@ -1059,10 +1065,12 @@ window.addEventListener("load", function () {
                 held.mode = "held";
                 caught = null;
                 held.el.click();     // 觸發原本的換色流程（背景、文字、船燈）
-                // 顏色資訊淡入：第一次釣到時從隱藏變成顯示，之後每次換色也重新淡入
-                document.body.classList.remove("awaiting-catch", "color-info-reveal");
-                void document.body.offsetWidth; // 讓淡入動畫重新開始
-                document.body.classList.add("color-info-reveal");
+                // 第一次釣到：顏色資訊從隱藏變成淡入；之後換色的「淡出 → 淡入」由 changetext.js 處理
+                if (document.body.classList.contains("awaiting-catch")) {
+                    document.body.classList.remove("awaiting-catch", "color-info-reveal");
+                    void document.body.offsetWidth; // 讓淡入動畫重新開始
+                    document.body.classList.add("color-info-reveal");
+                }
                 setLineColor(window.getComputedStyle(held.el).backgroundColor);
                 if (prev && prev !== held) tossBack(prev);
                 waterRipple = 1;     // 落進瓶子：水面晃一下

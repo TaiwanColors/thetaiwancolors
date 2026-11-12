@@ -917,6 +917,28 @@ body.color-info-reveal .Hex-int-text {
     animation: color-info-in 1.2s ease;
 }
 
+/* 換色時舊的顏色資訊先淡出（0.45s，要跟 changetext.js 的 FADE_OUT 一致），換好文字再淡入 */
+body.color-info-out .ColorNames-text,
+body.color-info-out .EnColorNames-text,
+body.color-info-out .C-text,
+body.color-info-out .M-text,
+body.color-info-out .Y-text,
+body.color-info-out .K-text,
+body.color-info-out .R-text,
+body.color-info-out .G-text,
+body.color-info-out .B-text,
+body.color-info-out .C-int-text,
+body.color-info-out .M-int-text,
+body.color-info-out .Y-int-text,
+body.color-info-out .K-int-text,
+body.color-info-out .R-int-text,
+body.color-info-out .G-int-text,
+body.color-info-out .B-int-text,
+body.color-info-out .Hex-int-text {
+    opacity: 0 !important;
+    transition: opacity 0.45s ease-in !important;
+}
+
 @keyframes color-info-in {
     from { opacity: 0; }
 }
