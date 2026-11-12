@@ -135,19 +135,6 @@ const orangeButtonTextMap = {
     },
 
     11: {
-        colorName: "淡水夕照",
-        enColorName: "Tamsui Sunset",
-        cIntText: "0",
-        mIntText: "38",
-        yIntText: "62",
-        kIntText: "6",
-        rIntText: "240",
-        gIntText: "149",
-        bIntText: "90",
-        hexText:"#F0955A",
-    },
-
-    12: {
         colorName: "椪柑",
         enColorName: "Ponkan",
         cIntText: "0",
@@ -160,7 +147,7 @@ const orangeButtonTextMap = {
         hexText:"#F39A2B",
     },
 
-    13: {
+    12: {
         colorName: "地瓜",
         enColorName: "Sweet Potato",
         cIntText: "0",
@@ -173,7 +160,7 @@ const orangeButtonTextMap = {
         hexText:"#E08A3C",
     },
 
-    14: {
+    13: {
         colorName: "木棉花",
         enColorName: "Kapok Blossom",
         cIntText: "0",
@@ -186,7 +173,7 @@ const orangeButtonTextMap = {
         hexText:"#E5683A",
     },
 
-    15: {
+    14: {
         colorName: "紅玉",
         enColorName: "Ruby Black Tea",
         cIntText: "0",
