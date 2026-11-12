@@ -124,14 +124,14 @@ const greenButtonTextMap = {
     10: {
         colorName: "芭樂",
         enColorName: "Guava",
-        cIntText: "16",
+        cIntText: "9",
         mIntText: "0",
-        yIntText: "46",
-        kIntText: "22",
-        rIntText: "167",
-        gIntText: "198",
-        bIntText: "106",
-        hexText:"#A7C66A",
+        yIntText: "45",
+        kIntText: "27",
+        rIntText: "170",
+        gIntText: "186",
+        bIntText: "103",
+        hexText:"#AABA67",
     },
 
     11: {

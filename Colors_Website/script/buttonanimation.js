@@ -14,14 +14,27 @@ document.addEventListener("DOMContentLoaded", function () {
         theme: Object.values(themeButtonTextMap), // 主題色：一定全部出現
     };
 
+    // 總數再多 EXTRA_BUTTONS 顆：每系先放 numberOfButtonsToDisplay 個，多的隨機分給各色系
+    // 手機（觸控螢幕或窄螢幕）維持原本的 24 顆（＋主題色），比較省電
+    const isMobile = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || window.innerWidth < 768;
+    const EXTRA_BUTTONS = isMobile ? 0 : 10;
+    const countPerDomain = {};
+    const families = Object.keys(colorDomains).filter(function (c) { return c !== "theme"; });
+    families.forEach(function (c) { countPerDomain[c] = numberOfButtonsToDisplay; });
+    for (var e = 0, guard = 0; e < EXTRA_BUTTONS && guard < 1000; guard++) {
+        var fam = families[Math.floor(Math.random() * families.length)];
+        // 每系最多比基本多 2 顆，分得比較平均；也不能超過色系裡的顏色數
+        if (countPerDomain[fam] < Math.min(numberOfButtonsToDisplay + 2, colorDomains[fam].length)) { countPerDomain[fam]++; e++; }
+    }
+
     createButtons();
 
     function createButtons() {
         for (var color in colorDomains) {
-            // 主題色每次都全部放出來；其他色系照原本隨機挑 numberOfButtonsToDisplay 個
+            // 主題色每次都全部放出來；其他色系隨機挑 countPerDomain 個
             var selectedButtonData = color === "theme"
                 ? colorDomains[color].slice()
-                : getRandomButtonData(colorDomains[color], numberOfButtonsToDisplay);
+                : getRandomButtonData(colorDomains[color], countPerDomain[color]);
             selectedButtonData.forEach(function (data) {
                 var circleButton = document.createElement("div");
                 circleButton.classList.add("circle-button");

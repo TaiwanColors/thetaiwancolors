@@ -21,7 +21,8 @@ document.addEventListener("DOMContentLoaded", function () {
     "use strict";
 
     const DPR = Math.min(2, window.devicePixelRatio || 1);
-    const FPS = 30;
+    const FPS = 30;          // 只有星星時每秒畫幾次（星星閃得慢，30 就很順）
+    // 有流星在飛的時候每一幀都畫：流星很快（每秒約 670px），每秒只畫 30 次會一頓一頓的
     const rand = (a, b) => a + Math.random() * (b - a);
     const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
     const easeOut = (x) => 1 - (1 - x) * (1 - x);
@@ -244,7 +245,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let running = false, lastDraw = -1e9, lastIconT = 0;
     function tick(nowMs) {
         const t = nowMs / 1000;
-        if (nowMs - lastDraw >= 1000 / FPS - 2) {
+        if (meteors.length || nowMs - lastDraw >= 1000 / FPS - 2) {
             lastDraw = nowMs;
             if (on) {
                 // 分頁切到背景時動畫會暫停；切回來不要把錯過的流星一次補發，從現在重新計時

@@ -16,7 +16,7 @@ const themeButtonTextMap = {
 
     2: {
         colorName: "動起來",
-        enColorName: "1號 黃世杰",
+        enColorName: "企鵝不捨桃園第1",
         cIntText: "0",
         mIntText: "47",
         yIntText: "56",

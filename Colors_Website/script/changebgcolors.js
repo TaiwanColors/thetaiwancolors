@@ -38,8 +38,8 @@ function changeColor(button) {
     // ===== 背景漸變 =====
     // 原本用 CSS transition（background-color 2.5s），但瀏覽器偶爾會在漸變剛結束的那一幀
     // 畫回「舊的顏色」，整個背景閃一下。改成自己每幀算顏色、最後一幀直接設成目標色，就不會閃。
-    // 速度曲線跟 CSS 的 ease 一樣，才會跟瓶子的水、船燈、釣線（仍是 CSS 2.5s ease）同步。
-    var BG_FADE = 2500; // 毫秒
+    // 速度曲線跟 CSS 的 ease 一樣，才會跟瓶子的水、船燈、釣線（仍是 CSS 3s ease）同步。
+    var BG_FADE = 3000; // 毫秒（換色漸變 3 秒）
     var bgFadeRaf = 0;
     function parseRGB(s) {
         var m = (s || "").match(/[\d.]+/g);

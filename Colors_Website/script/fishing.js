@@ -38,6 +38,37 @@ window.addEventListener("load", function () {
         swayOmega: 1.2,               // 船晃動角速度 (rad/s)
         fishSpeed: 42,                // 色球基礎游速 (px/s)
         swapEvery: [18, 35],          // 每隔幾秒（隨機）讓一顆色球游出畫面、換成別的顏色游回來
+        wanderEvery: [5, 12],         // 每隔幾秒（隨機）讓一隻魚自己游出畫面（左、右或下面），顏色不變
+        awayTime: [2, 6],             // 游出去後在畫面外待幾秒才回來
+        maxAway: 4,                   // 同時最多幾隻游出去
+        schoolEvery: [12, 24],        // 每隔幾秒（隨機）試著組一群群游
+        schoolGap: 17,                // 隊友之間至少隔多遠 (px)，不會疊在一起（色球約 15px）
+        schoolSpeed: 1.35,            // 群游時游得比單獨的魚快一點（跟慢慢晃的散魚有對比，但不激動）
+        schoolStretch: 1.12,          // 群游中的色球沿著游的方向稍微拉長成橢圓（看得出方向就好）
+        leaderSwap: [6, 14],          // 每隔幾秒（隨機）換一隻魚帶頭
+        crossChance: 0.8,
+        schoolOvershoot: 160,         // 群游可以游出畫面多遠 (px)，之後轉回來           // 帶頭魚挑下一個目標時，有多少機率是「橫越到另一側」（長距離左右移動）
+        // ---- 隊員跟隨的積極度 ----
+        followTurn: 6,              // 隊員轉向的速度（急轉時 ×1.6、滑行時 ×0.3）
+        followSnap: 20,               // 離帶頭魚超過 4 倍這個距離就衝一下追上（越小越積極）
+        followChase: 25,              // 滑行時依離帶頭魚的遠近微調速度的靈敏度（越小調得越多）
+        reactAngle: 0.45,             // 想去的方向跟自己差超過幾弧度（約 26°）才「反應」急轉（太小會一直抖）
+        reactTime: [0.05, 0.15],      // 反應時間（秒）：看到 → 轉，附近一隻傳一隻累積成波浪
+        burstBoost: 0.8,            // 衝刺時加速多少（× 基礎游速）
+        schoolMax: 1,                 // 同時最多幾群（一大群比較醒目，像真的魚群）
+        schoolSize: [5, 7],           // 一群幾隻（組隊時 5~7 隻；之後拉新隊員也不會超過 7 隻）
+        schoolShare: 0.55,            // 所有魚裡最多幾成在群裡（留一些散魚，海裡才不會空）
+        schoolLife: [60, 120],        // 一群維持幾秒後散開
+        schoolRecruit: 220,           // 帶頭魚附近多遠的魚會被拉進隊伍 (px)（經過時沿路把附近的魚吸進來）
+        schoolLeaveEvery: 60,         // 每隻隊員平均幾秒會脫隊一次
+        // ---- 群聚（隊員只看身邊的隊友）----
+        flockRadius: 110,             // 看得到多遠的隊友 (px)
+        flockAlign: 2.4,              // 對齊：跟附近隊友同方向的力道（大：整群方向一致）
+        flockCohesion: 0.2,           // 聚攏：往附近隊友中心靠的力道（小一點，才會散開不擠成一團）
+        flockSeparate: 1.8,           // 分開：太近就推開的力道
+        flockSpacing: 32,             // 隊友之間大約保持的距離 (px)
+        flockStretch: 7,            // 帶子的長度：每多一隻隊員，往後多拉幾 px
+        flockWidth: 48,               // 帶子的寬度：隊員左右最多偏幾 px
         hookOmega: 7,                 // 魚鉤彈簧的自然頻率
         hookZeta: 0.55,               // 魚鉤彈簧阻尼（<1 會微微擺盪）
         touchLinger: 4,               // 手指離開後鉤子停留時間 (s)
@@ -281,7 +312,11 @@ window.addEventListener("load", function () {
             f2: rand(1.1, 1.9), p2: rand(0, TAU),
             fb: rand(1.6, 2.6), pb: rand(0, TAU),
             flee: 0,                   // 受驚加速剩餘時間
-            mode: "swim",              // swim | hooked | held | toss
+            mode: "swim",              // swim | hooked | held | toss | away（在畫面外等著游回來）
+            goal: null, side: "left",  // 游出去（out）／游進來（in）與方向（left | right | bottom）
+            recolor: false,            // 這次游出去要不要換色
+            sch: null,                 // 正在哪一群裡群游（null = 自己游）
+            backAt: 0,                 // 在畫面外待到什麼時候
             splashEnd: true,           // toss 落點要不要濺水花
             // 拋物線動畫用
             ax: 0, ay: 0, bx: 0, by: 0, at: 0, aT: 1, aH: 0,
@@ -299,7 +334,7 @@ window.addEventListener("load", function () {
         setLineColor(window.getComputedStyle(held.el).backgroundColor);
     } else {
         // 一開始沒有目前的顏色（固定底色）：釣線、瓶子照背景色決定深淺
-        // （背景色會花 2.5 秒漸變過去，要讀「目標」顏色，不能讀漸變中的顏色）
+        // （背景色會花 3 秒漸變過去，要讀「目標」顏色，不能讀漸變中的顏色）
         const sq = document.querySelector(".square");
         setLineColor((sq && sq.style.backgroundColor) || "rgb(76, 76, 76)");
     }
@@ -452,43 +487,340 @@ window.addEventListener("load", function () {
 
     // ===== 色球動作 =====
     function swim(f, t, dt) {
-        let turn = 0.9 * Math.sin(t * f.f1 + f.p1) + 0.55 * Math.sin(t * f.f2 + f.p2);
-        turn -= 0.45 * Math.sin(2 * f.h);           // 偏好水平游（h=0 或 π 是穩定點）
+        // 群游中的隊員：跟著帶頭的魚游（見下方「群游」）
+        if (f.sch && f.sch.leader !== f) { followSwim(f, f.sch, t, dt); return; }
+        let turn;
+        if (f.sch) {
+            // 帶頭的魚：有目的地游——挑一個前方的目標點，平順地轉過去；到了（或太久）再挑下一個
+            const s = f.sch;
+            if (!s.tgt || Math.hypot(s.tgt.x - f.x, s.tgt.y - f.y) < 50 || t > s.tgtUntil) pickTarget(s, f, t);
+            turn = angleDiff(Math.atan2(s.tgt.y - f.y, s.tgt.x - f.x), f.h) * 1.1;
+            turn += 0.2 * Math.sin(t * f.f1 + f.p1);  // 一點點自然的擺動
+        } else {
+            turn = 0.9 * Math.sin(t * f.f1 + f.p1) + 0.55 * Math.sin(t * f.f2 + f.p2);
+            turn -= 0.45 * Math.sin(2 * f.h);       // 偏好水平游（h=0 或 π 是穩定點）
+        }
 
         // 靠近邊界就轉向內側
         const m = 60;
         let wx = 0, wy = 0;
+        const fromBottom = f.goal && f.side === "bottom";      // 往下游出去／從下面游上來
         if (f.goal) {
-            // 要游出畫面（out）或剛游進來（in）：朝目標方向游，左右不受邊界限制
-            const dir = f.goal === "out" ? f.exitDir : -f.exitDir;
-            turn += angleDiff(dir > 0 ? 0 : Math.PI, f.h) * 1.6;
+            // 要游出畫面（out）或剛游進來（in）：朝目標方向游，那個方向不受邊界限制
+            const aim = f.goal === "out" ? SIDE_ANGLE[f.side] : IN_ANGLE[f.side];
+            turn += angleDiff(aim, f.h) * 1.6;
+            if (!fromBottom) { if (f.y < B.t + m * 0.5) wy = 1; else if (f.y > B.b - m * 0.5) wy = -1; }
+            else if (f.y < B.t + m * 0.5) wy = 1;
+        } else if (f.sch) {
+            // 帶頭的魚：左右和下面不會被邊界擋住（可以游出畫面再轉回來），只有海面擋著
+            if (f.y < B.t + m * 0.5) wy = 1;
         } else {
             if (f.x < B.l + m) wx = 1; else if (f.x > B.r - m) wx = -1;
+            if (f.y < B.t + m * 0.5) wy = 1; else if (f.y > B.b - m * 0.5) wy = -1;
         }
-        if (f.y < B.t + m * 0.5) wy = 1; else if (f.y > B.b - m * 0.5) wy = -1;
         if (wx || wy) turn += angleDiff(Math.atan2(wy, wx), f.h) * 2.2;
         f.h += turn * dt;
 
         // 擺尾：sin^4 讓速度一陣一陣的，像魚在「划一下、滑一段」
         const s = Math.max(0, Math.sin(t * f.fb + f.pb));
         f.kick = s * s * s * s;
-        let speed = CFG.fishSpeed * (0.45 + 1.5 * f.kick);
+        let speed = CFG.fishSpeed * (0.45 + 1.5 * f.kick) * (f.sch ? CFG.schoolSpeed : 1);
         if (f.flee > 0) { f.flee -= dt; speed += 120 * f.flee; f.kick = Math.max(f.kick, f.flee); }
         f.x += Math.cos(f.h) * speed * dt;
-        if (!f.goal) f.x = clamp(f.x, B.l, B.r);
-        f.y = clamp(f.y + Math.sin(f.h) * speed * dt, B.t, B.b);
+        f.y += Math.sin(f.h) * speed * dt;
+        if (f.sch) clampSchool(f);
+        else {
+            if (!f.goal) f.x = clamp(f.x, B.l, B.r);
+            f.y = fromBottom ? Math.max(B.t, f.y) : clamp(f.y, B.t, B.b);
+        }
 
-        if (f.goal === "out" && (f.x < -30 || f.x > vw + 30)) {
-            // 游出畫面了：換成同色系裡、畫面上沒有的另一個顏色，再從左或右游進來
-            recolor(f);
-            f.exitDir = Math.random() < 0.5 ? -1 : 1;           // 從這一側進來
-            f.x = f.exitDir < 0 ? -25 : vw + 25;
-            f.y = rand(B.t + 20, B.b - 10);
-            f.h = f.exitDir < 0 ? 0 : Math.PI;
-            f.goal = "in";
-        } else if (f.goal === "in" && f.x > B.l + 40 && f.x < B.r - 40) {
+        if (f.goal === "out" && (f.x < -30 || f.x > vw + 30 || f.y > vh + 30)) {
+            leaveScreen(f, t);
+        } else if (f.goal === "in" && (f.side === "bottom" ? f.y < B.b - 30 : f.x > B.l + 40 && f.x < B.r - 40)) {
             f.goal = null;                                      // 進到畫面裡，恢復平常游動
         }
+    }
+
+    // ===== 游出畫面／游回來 =====
+    // side：left | right | bottom。游出去朝 SIDE_ANGLE 的方向，從那一邊游進來朝 IN_ANGLE 的方向
+    const SIDE_ANGLE = { left: Math.PI, right: 0, bottom: Math.PI / 2 };
+    const IN_ANGLE = { left: 0, right: Math.PI, bottom: -Math.PI / 2 };
+    // 往哪一邊游出去：約 1/3 往下，其餘往左右比較近的那一邊（偶爾往遠的那邊）
+    // （海面不高，用距離決定的話幾乎都會往下出去）
+    function pickExitSide(f) {
+        if (Math.random() < 0.33) return "bottom";
+        const nearLeft = f.x < (B.l + B.r) / 2;
+        return (Math.random() < 0.8) === nearLeft ? "left" : "right";
+    }
+    function sendOut(f, opts) {
+        f.goal = "out";
+        f.side = pickExitSide(f);
+        f.recolor = !!(opts && opts.recolor);
+    }
+    // 游出畫面了：要換色的就換色；然後在畫面外待一下
+    function leaveScreen(f, t) {
+        if (f.recolor) recolor(f);
+        f.recolor = false;
+        f.goal = null;
+        f.mode = "away";
+        f.backAt = t + rand(CFG.awayTime[0], CFG.awayTime[1]);
+    }
+    // 從某一邊游進來
+    function enterFrom(f, side) {
+        f.mode = "swim";
+        f.goal = "in";
+        f.side = side;
+        if (side === "bottom") {
+            f.x = rand(B.l + 60, B.r - 60);
+            f.y = vh + 25;
+            f.h = -Math.PI / 2 + rand(-0.15, 0.15);
+        } else {
+            f.x = side === "left" ? -25 : vw + 25;
+            f.y = rand(B.t + 25, B.b - 25);
+            f.h = (side === "left" ? 0 : Math.PI) + rand(-0.15, 0.15);
+        }
+    }
+    function randomSide() { const r = Math.random(); return r < 0.4 ? "left" : r < 0.8 ? "right" : "bottom"; }
+
+    // 在畫面外的魚：時間到就從隨機一邊游回來
+    function updateAway(t) {
+        for (const f of fish) {
+            if (f.mode === "away" && t >= f.backAt) enterFrom(f, randomSide());
+        }
+    }
+
+    // 偶爾讓一隻魚自己游出去晃一下
+    let nextWander = 0;
+    const isFree = (f) => f.mode === "swim" && !f.goal && !f.sch && f !== autoTarget;
+    function scheduleWander(t) {
+        if (!nextWander) nextWander = t + rand(CFG.wanderEvery[0], CFG.wanderEvery[1]);
+        if (t < nextWander) return;
+        nextWander = t + rand(CFG.wanderEvery[0], CFG.wanderEvery[1]);
+        const outCount = fish.filter((f) => f.goal === "out" || f.mode === "away").length;
+        const c = fish.filter(isFree);
+        if (c.length && outCount < CFG.maxAway) sendOut(c[Math.floor(Math.random() * c.length)]);
+    }
+
+    // ===== 群游 =====
+    // 偶爾有一隻魚當帶頭的，附近幾隻跟上來組成一群：
+    //   - 隊員各自有一個「位置」（帶頭魚的後方、左右散開），離位置遠就加速游過去，近了就跟著帶頭魚的方向
+    //   - 方向用帶頭魚「幾分之一秒前」的方向 → 每隻轉彎有一點點時差，一波一波跟上
+    //   - 擺尾節奏跟帶頭魚對齊（也帶一點時差），再加一點各自的小擺動，不會整齊得像機器
+    //   - 游的途中偶爾會拉到附近的新隊員，偶爾有隊員脫隊；時間到了就各自散開
+    const schools = [];
+    let nextSchool = 0;    function joinSchool(g, s) {
+        g.sch = s;
+        s.members.push(g);
+        assignSlot(g, s, s.members.length - 1);
+    }
+    // 隊員的擺尾節奏與反應狀態；rank = 第幾個加入（越後面擺尾越晚一點）
+    function assignSlot(g, s, rank) {
+        const L = s.leader;
+        g.fb = L.fb;                                // 擺尾頻率跟帶頭的一樣
+        g.pb = L.pb - rank * 0.5 + rand(-0.3, 0.3); // 越後面的擺尾越晚一點
+        g.wob = rand(0.01, 0.035);                  // 各自的小擺動幅度（很小：整群方向才整齊）
+        g.reactAt = 0;
+        g.lane = rand(-CFG.flockWidth, CFG.flockWidth); // 在帶子裡偏左或偏右多少                              // 正在反應中：什麼時候轉
+        g.bS = -1; g.bD = 0.2; g.bStr = 0; g.bCool = 0; // 衝刺（擺尾一下）的開始時間、長度、力道、冷卻
+    }
+    function leaveSchool(g, scatter) {
+        const s = g.sch;
+        if (!s) return;
+        g.sch = null;
+        s.members = s.members.filter((m) => m !== g);
+        if (scatter) { g.h += (Math.random() < 0.5 ? -1 : 1) * rand(0.5, 1.2); g.flee = 0.25; } // 轉個彎游走
+        // 離開隊伍時如果在畫面外，就自己游回來（不會突然跳回畫面裡）
+        if (g.mode === "swim" && !g.goal && (g.x < B.l || g.x > B.r || g.y > B.b)) {
+            g.goal = "in";
+            g.side = g.y > B.b ? "bottom" : g.x < B.l ? "left" : "right";
+        }
+    }
+    function disband(s) {
+        s.members.slice().forEach((g) => leaveSchool(g, g !== s.leader));
+        s.members = [];
+    }
+    function nearestFree(x, y, r, n) {
+        return fish.filter(isFree)
+            .map((g) => [g, Math.hypot(g.x - x, g.y - y)])
+            .filter((p) => p[1] < r)
+            .sort((a, b) => a[1] - b[1])
+            .slice(0, n)
+            .map((p) => p[0]);
+    }
+    const schooledCount = () => fish.filter((g) => g.sch).length;
+    const schoolRoom = () => Math.floor(fish.length * CFG.schoolShare) - schooledCount(); // 還能再拉幾隻進群
+    function formSchool(t) {
+        const free = fish.filter(isFree);
+        if (schoolRoom() < 3) return;
+        for (let tries = 0; tries < 4 && free.length >= 2; tries++) {
+            const L = free[Math.floor(Math.random() * free.length)];
+            const size = Math.min(schoolRoom(), Math.round(rand(CFG.schoolSize[0], CFG.schoolSize[1])));
+            const mates = nearestFree(L.x, L.y, CFG.schoolRecruit * 1.5, size).filter((g) => g !== L).slice(0, size - 1);
+            if (!mates.length) continue;
+            const s = { leader: L, members: [L], end: t + rand(CFG.schoolLife[0], CFG.schoolLife[1]), nextRecruit: t + rand(2, 5),
+                        tgt: null, tgtUntil: 0, nextLeader: t + rand(CFG.leaderSwap[0], CFG.leaderSwap[1]) };
+            L.sch = s;
+            mates.forEach((g) => joinSchool(g, s));
+            schools.push(s);
+            return;
+        }
+    }
+    // 帶頭魚的下一個目標點：大多是「橫越海面」——在左半邊就游到右側、在右半邊就游到左側，
+    // 整群做長距離的左右移動；偶爾（CFG.crossChance 以外）挑一個附近前方的點，路線才不會太單調。
+    // 到了另一側要折返時，轉向有上限，會畫一個圓弧掉頭，不會原地急轉。
+    function pickTarget(s, L, t) {
+        const m = 70, W = B.r - B.l;
+        // 目標離上下邊緣遠一點：整群（帶子有寬度）才不會被擠扁在海底或海面
+        const yLo = B.t + Math.min(45, (B.b - B.t) * 0.25), yHi = B.b - Math.min(55, (B.b - B.t) * 0.3);
+        const y = rand(yLo, Math.max(yLo, yHi));
+        if (Math.random() < CFG.crossChance) {
+            const goRight = L.x < (B.l + B.r) / 2;
+            // 目標有時在畫面外：整群會游出邊界、轉個彎再回來（不會撞到邊就停）
+            const o = CFG.schoolOvershoot;
+            const x = Math.random() < 0.6
+                ? (goRight ? B.r + rand(o * 0.3, o * 0.8) : B.l - rand(o * 0.3, o * 0.8))
+                : (goRight ? rand(B.r - m - W * 0.12, B.r - m) : rand(B.l + m, B.l + m + W * 0.12));
+            s.tgt = { x: x, y: y };
+        } else {
+            let best = null, bestScore = Infinity;
+            for (let i = 0; i < 10; i++) {
+                const x = rand(B.l + m, B.r - m), yy = rand(yLo, Math.max(yLo, yHi));
+                if (Math.hypot(x - L.x, yy - L.y) < 180) continue;
+                const score = Math.abs(angleDiff(Math.atan2(yy - L.y, x - L.x), L.h)) + rand(0, 0.6);
+                if (score < bestScore) { bestScore = score; best = { x: x, y: yy }; }
+            }
+            s.tgt = best || { x: (B.l + B.r) / 2, y: y };
+        }
+        // 最久花多少時間到目標（橫越整個畫面要比較久）
+        s.tgtUntil = t + 8 + Math.hypot(s.tgt.x - L.x, s.tgt.y - L.y) / (CFG.fishSpeed * CFG.schoolSpeed * 0.8);
+    }
+    // 換帶頭：通常是游在最前面的那隻接手（像是超車），原本帶頭的退到隊伍裡
+    function swapLeader(s) {
+        const L = s.leader, c = Math.cos(L.h), sn = Math.sin(L.h);
+        let best = null, bestAhead = -Infinity;
+        for (const g of s.members) {
+            if (g === L) continue;
+            const ahead = (g.x - L.x) * c + (g.y - L.y) * sn + rand(0, 25);
+            if (ahead > bestAhead) { bestAhead = ahead; best = g; }
+        }
+        if (!best) return;
+        const i = s.members.indexOf(best), j = s.members.indexOf(L);
+        s.members[i] = L; s.members[j] = best;      // 交換順序：新帶頭排第一
+        s.leader = best;
+        assignSlot(L, s, Math.max(1, i));
+        // 新帶頭沿用同一個目標，隊伍方向不會突然改變
+    }
+    function updateSchools(t, dt) {
+        if (!nextSchool) nextSchool = t + rand(3, 8);
+        if (t >= nextSchool) {
+            nextSchool = t + rand(CFG.schoolEvery[0], CFG.schoolEvery[1]);
+            if (schools.length < CFG.schoolMax) formSchool(t);
+        }
+        for (let i = schools.length - 1; i >= 0; i--) {
+            const s = schools[i];
+            // 被釣走、要游出去的就不算隊員了
+            s.members.slice().forEach((g) => { if (g.sch !== s || g.mode !== "swim" || g.goal) leaveSchool(g, false); });
+            if (!s.members.includes(s.leader) && s.members.length >= 2) {
+                // 帶頭的離開了：由最早加入的隊員接手
+                s.leader = s.members[0];
+            }
+            if (s.members.length < 2 || !s.members.includes(s.leader) || t > s.end) {
+                disband(s); schools.splice(i, 1); continue;
+            }
+            // 偶爾拉到附近的新隊員
+            if (t >= s.nextRecruit) {
+                s.nextRecruit = t + rand(0.8, 2.5);
+                if (s.members.length < CFG.schoolSize[1] && schoolRoom() > 0 && Math.random() < 0.7) {
+                    const g = nearestFree(s.leader.x, s.leader.y, CFG.schoolRecruit, 1)[0];
+                    if (g) joinSchool(g, s);
+                }
+            }
+            // 偶爾換一隻魚帶頭
+            if (t >= s.nextLeader) {
+                s.nextLeader = t + rand(CFG.leaderSwap[0], CFG.leaderSwap[1]);
+                swapLeader(s);
+            }
+            // 偶爾有隊員脫隊
+            s.members.slice().forEach((g) => {
+                if (g !== s.leader && Math.random() < dt / CFG.schoolLeaveEvery) leaveSchool(g, true);
+            });
+        }
+    }
+    // 衝刺一下（快速擺尾）：短短 0.2 秒左右的加速＋急轉，之後滑行；有冷卻，不會連續衝
+    function startBurst(f, t, strength) {
+        if (t < f.bCool) return;
+        f.bS = t;
+        f.bD = rand(0.16, 0.28);
+        f.bStr = strength;
+        f.bCool = t + f.bD + rand(0.15, 0.35);
+    }
+    // 隊員的游法：群聚（像真的魚群）——每隻只看身邊的隊友：
+    //   對齊：跟附近隊友的方向一致（帶頭魚的份量比較重）
+    //   聚攏：往附近隊友的中心靠
+    //   分開：太近就推開，不疊在一起
+    //   跟隨：離帶頭魚太遠就往牠游
+    // 所以整群會像一條流動的帶子：轉彎時拉長、變形，再慢慢收攏。
+    // 方向差太多時：短暫反應（reactTime）→ 擺尾急轉；落後太多就衝一下追上，其餘時間滑行微調。
+    function followSwim(f, s, t, dt) {
+        const L = s.leader;
+        let ax = 0, ay = 0, cx = 0, cy = 0, n = 0, sx = 0, sy = 0;
+        const R = CFG.flockRadius, gap = CFG.flockSpacing;
+        for (const g of s.members) {
+            if (g === f) continue;
+            const ex = g.x - f.x, ey = g.y - f.y, d = Math.hypot(ex, ey);
+            if (d > R) continue;
+            const wgt = g === L ? 3 : 1;
+            ax += Math.cos(g.h) * wgt; ay += Math.sin(g.h) * wgt;
+            cx += g.x * wgt; cy += g.y * wgt; n += wgt;
+            if (d < gap && d > 0.01) { sx -= ex / d * (gap - d) / gap; sy -= ey / d * (gap - d) / gap; }
+        }
+        let vx = 0, vy = 0;
+        if (n) {
+            const al = Math.hypot(ax, ay) || 1;
+            vx += ax / al * CFG.flockAlign; vy += ay / al * CFG.flockAlign;
+            cx /= n; cy /= n;
+            const cdx = cx - f.x, cdy = cy - f.y, cd = Math.hypot(cdx, cdy) || 1;
+            const coh = CFG.flockCohesion * clamp(cd / 50, 0, 1);
+            vx += cdx / cd * coh; vy += cdy / cd * coh;
+        }
+        vx += sx * CFG.flockSeparate; vy += sy * CFG.flockSeparate;
+        // 跟隨：往帶頭魚後方「自己那一段」靠（越晚加入的越後面、左右各偏一點）→ 整群沿著游的方向拉長成一條帶子
+        const idx = Math.max(1, s.members.indexOf(f));
+        const back = 18 + idx * CFG.flockStretch;
+        const c = Math.cos(L.h), sn = Math.sin(L.h);
+        const bx = L.x - c * back - sn * f.lane, by = L.y - sn * back + c * f.lane;
+        const lx = bx - f.x, ly = by - f.y, ld = Math.hypot(lx, ly) || 1;
+        const pull = clamp((ld - 25) / 100, 0, 1.5);
+        vx += lx / ld * pull + Math.cos(L.h) * 0.4;
+        vy += ly / ld * pull + Math.sin(L.h) * 0.4;
+
+        const want = Math.atan2(vy, vx) + f.wob * Math.sin(t * f.f2 + f.p2);
+        const diff = angleDiff(want, f.h);
+        // 反應：方向差太多 → 等一下下 → 急轉
+        if (!f.reactAt && Math.abs(diff) > CFG.reactAngle && t >= f.bCool) f.reactAt = t + rand(CFG.reactTime[0], CFG.reactTime[1]);
+        if (f.reactAt && t >= f.reactAt) { f.reactAt = 0; startBurst(f, t, 0.7); }
+        if (ld > CFG.followSnap * 3) startBurst(f, t, 1.2);   // 離自己那一段太遠：衝一下追上
+        const bp = t - f.bS;
+        const b = bp >= 0 && bp < f.bD ? Math.sin(Math.PI * bp / f.bD) : 0; // 衝刺力道曲線 0→1→0
+        f.h += diff * Math.min(1, CFG.followTurn * (b > 0 ? 1.6 : 0.6) * dt);
+
+        // 速度：平常滑行（照擺尾節奏），在帶頭魚後面太遠就快一點，衝刺時再加速
+        const k = Math.max(0, Math.sin(t * f.fb + f.pb));
+        const glide = k * k * k * k;
+        f.kick = Math.max(glide * 0.8, b * f.bStr);  // 衝刺時身體也會拉長
+        const ahead = lx * Math.cos(f.h) + ly * Math.sin(f.h);
+        let speed = CFG.fishSpeed * CFG.schoolSpeed * (0.55 + 1.1 * glide) * clamp(1 + ahead / (CFG.followChase * 4), 0.7, 1.5);
+        speed += CFG.fishSpeed * CFG.schoolSpeed * CFG.burstBoost * b * f.bStr;
+        if (f.flee > 0) { f.flee -= dt; speed += 120 * f.flee; }
+        f.x += Math.cos(f.h) * speed * dt;
+        f.y += Math.sin(f.h) * speed * dt;
+        clampSchool(f);
+    }
+    // 群游中的魚可以超出畫面左右與下方（最多 CFG.schoolOvershoot），只有海面擋著
+    function clampSchool(f) {
+        const o = CFG.schoolOvershoot;
+        f.x = clamp(f.x, B.l - o, B.r + o);
+        f.y = clamp(f.y, B.t, B.b);   // 往下不超出：魚才不會沉到畫面下面看不見（左右可以超出）
     }
 
     // ===== 色球游出去換色 =====
@@ -516,12 +848,11 @@ window.addEventListener("load", function () {
     function scheduleSwap(t) {
         if (!nextSwap) { nextSwap = t + rand(CFG.swapEvery[0], CFG.swapEvery[1]); return; }
         if (t < nextSwap) return;
-        if (fish.some((f) => f.goal)) return;                   // 一次只換一顆
-        const candidates = fish.filter((f) => f.mode === "swim" && !isTheme(f) && f !== autoTarget);
+        if (fish.some((f) => f.recolor)) return;                // 一次只換一顆
+        const candidates = fish.filter((f) => isFree(f) && !isTheme(f));
         if (candidates.length) {
-            const f = candidates[Math.floor(Math.random() * candidates.length)];
-            f.goal = "out";
-            f.exitDir = f.x < vw / 2 ? -1 : 1;                  // 往比較近的那一邊游出去
+            // 往比較近的那一邊（左、右或下面）游出去，換色後再從隨機一邊游回來
+            sendOut(candidates[Math.floor(Math.random() * candidates.length)], { recolor: true });
         }
         nextSwap = t + rand(CFG.swapEvery[0], CFG.swapEvery[1]);
     }
@@ -650,11 +981,14 @@ window.addEventListener("load", function () {
                     airYanks = 1;
                     caught = f;
                     f.goal = null;          // 正在游出去／游進來的被釣到了，就不換色了
+                    f.recolor = false;
+                    leaveSchool(f, false);  // 也離開群游的隊伍
                     flyRose = false;
                     touchSteerX = hx;       // 手機：空中從目前位置開始滑動操控
                     autoAim = clickTouch;   // 手機：自動拋向船
                     if (autoAim) aimAtBoat();
                     buzz(15);               // 手機震動：鉤到了
+                    if (window.sfx) window.sfx.play("catch"); // 釣起來的音效（sfx.js）
                     f.mode = "hooked";
                     splash(hx + bendDX(), hy + bendDY());
                     setState("fly");
@@ -820,13 +1154,24 @@ window.addEventListener("load", function () {
 
         // --- 色球 ---
         scheduleSwap(t);
+        scheduleWander(t);
+        updateAway(t);
+        updateSchools(t, dt);
         for (let i = 0; i < fish.length; i++) {
             const f = fish[i];
             let rot = f.h, sx = 1, sy = 1;
             switch (f.mode) {
+                case "away":
+                    continue;           // 在畫面外等著游回來，不用畫
                 case "swim":
                     swim(f, t, dt);
-                    rot = f.h; sx = 1 + 0.18 * f.kick; sy = 1 - 0.12 * f.kick;
+                    // 群游中：固定沿著游的方向稍微拉長，不跟著擺尾一伸一縮（不然一抽一抽像蟲）
+                    //（加入／離開群時慢慢變形，不會突然跳）
+                    f.str = (f.str || 1) + ((f.sch ? CFG.schoolStretch : 1) - (f.str || 1)) * Math.min(1, 1.2 * dt);
+                    const inSchool = (f.str - 1) / Math.max(0.001, CFG.schoolStretch - 1); // 0 = 散魚、1 = 群游中
+                    const pulse = 1 - clamp(inSchool, 0, 1);                               // 群游時擺尾變形漸漸消失
+                    rot = f.h; sx = 1 + 0.18 * f.kick * pulse; sy = 1 - 0.12 * f.kick * pulse;
+                    sx *= f.str; sy /= Math.sqrt(f.str);
                     break;
                 case "hooked":
                     // 飛行中的位置等這一幀魚鉤角度算好後再放（見下方「魚鉤」之後）

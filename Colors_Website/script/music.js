@@ -15,10 +15,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const FADE_IN = 2;       // 開始播放（含每次重新循環）時淡入的秒數
     const FADE_OUT = 4;      // 曲子結束前淡出的秒數
 
-    const audio = new Audio(SRC);
+    // 音樂檔很大（約 10MB）：先不下載，等頁面其他東西（圖片、字型）都載入完才開始，
+    // 才不會跟它們搶網路，讓手機在慢的網路下也能快點載完
+    const audio = new Audio();
     audio.loop = false;      // 自己控制循環：結束時淡出 → 從頭播放 → 淡入
-    audio.preload = "auto";
+    audio.preload = "none";
     audio.volume = 0;
+    audio.src = SRC;
+    function startDownload() {
+        if (audio.preload === "auto") return;
+        audio.preload = "auto";
+        // 已經在播（或已開始下載）就不要 load()，否則會從頭重來
+        if (audio.paused && audio.readyState === 0) audio.load();
+    }
+    if (document.readyState === "complete") startDownload();
+    else window.addEventListener("load", startDownload);
 
     let playing = false;
     let fadeTimer = 0;

@@ -94,16 +94,16 @@ const redButtonTextMap = {
     // 有出處的顏色另外標註來源，其餘色值為自訂。
 
     8: {
-        colorName: "喜廟",
-        enColorName: "Festive Temple",
+        colorName: "廟",
+        enColorName: "Temple",
         cIntText: "0",
-        mIntText: "75",
-        yIntText: "79",
-        kIntText: "22",
-        rIntText: "200",
-        gIntText: "50",
-        bIntText: "42",
-        hexText:"#C8322A",
+        mIntText: "72",
+        yIntText: "72",
+        kIntText: "28",
+        rIntText: "183",
+        gIntText: "52",
+        bIntText: "52",
+        hexText:"#B73434",
     },
 
     9: {
